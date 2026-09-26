@@ -35,7 +35,17 @@
   .topspacer{flex:1}
   .btn{border:1px solid #dbe4ef;background:white;color:#0f172a;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 1px 0 rgba(15,23,42,.03)}
   .btn:hover{background:#f8fafc}.btn.primary{background:#0f172a;border-color:#0f172a;color:white}.btn.blue{background:#2563eb;border-color:#2563eb;color:white}.btn.danger{color:#dc2626}.btn.ghost{background:transparent}
-  .status{font-size:11px;color:var(--muted);min-width:88px;text-align:right}
+  .status{font-size:11px;color:var(--muted);min-width:175px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:7px;white-space:nowrap;font-weight:700}
+  .status::before{content:"";width:8px;height:8px;border-radius:999px;background:#94a3b8;flex:0 0 auto;box-shadow:0 0 0 3px rgba(148,163,184,.14)}
+  .status[data-state="saved"]{color:#15803d}
+  .status[data-state="saved"]::before{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14)}
+  .status[data-state="saving"]{color:#9a6700}
+  .status[data-state="saving"]::before{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.16);animation:savePulse 1s ease-in-out infinite}
+  .status[data-state="unsaved"]{color:#b45309}
+  .status[data-state="unsaved"]::before{background:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.14)}
+  .status[data-state="error"]{color:#b91c1c}
+  .status[data-state="error"]::before{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.14)}
+  @keyframes savePulse{0%,100%{opacity:.45;transform:scale(.9)}50%{opacity:1;transform:scale(1.08)}}
 
   .main{display:grid;grid-template-columns:var(--sideW) 1fr;height:calc(100vh - var(--topH));min-height:0}
   .sidebar{border-right:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.78);backdrop-filter:blur(12px);padding:14px;overflow:auto}
@@ -185,10 +195,20 @@
   function uid(){return 'id_' + Math.random().toString(36).slice(2) + Date.now().toString(36)}
   function page(){return state.pages[state.current]}
   function toast(msg){const t=el('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._to);t._to=setTimeout(()=>t.classList.remove('show'),1800)}
-  function markDirty(){state.dirty=true;status.textContent=driveState.fileId?'Changed · Drive autosave queued':(projectHandle?'Changed':'Local autosaved'); clearTimeout(markDirty._t); markDirty._t=setTimeout(saveLocal,220); scheduleLinkedAutosave(); scheduleCloudAutosave();}
-  function setStatus(s){status.textContent=s}
+  function markDirty(){state.dirty=true;setStatus(driveState.fileId?'Changes pending · Drive autosave queued':(projectHandle?'Changes pending · local file autosave queued':'Changes pending · local autosave')); clearTimeout(markDirty._t); markDirty._t=setTimeout(saveLocal,220); scheduleLinkedAutosave(); scheduleCloudAutosave();}
+  function setStatus(s){
+    status.textContent=s;
+    const lower=String(s).toLowerCase();
+    let stateName='neutral';
+    if(lower.includes('saved')) stateName='saved';
+    if(lower.includes('saving') || lower.includes('reconnecting')) stateName='saving';
+    if(lower.includes('changed') || lower.includes('pending') || lower.includes('queued') || lower.includes('not saved')) stateName='unsaved';
+    if(lower.includes('failed') || lower.includes('error')) stateName='error';
+    if(lower.includes('saved to google drive')) stateName='saved';
+    status.dataset.state=stateName;
+  }
   function loadLocal(){try{const raw=localStorage.getItem(LS_KEY); if(raw){const data=JSON.parse(raw); if(data.pages&&data.pages.length){state.pages=data.pages; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||'paper'; return true;}}}catch(e){} return false;}
-  function saveLocal(){try{localStorage.setItem(LS_KEY, JSON.stringify({pages:state.pages,current:state.current,mode:state.mode,savedAt:Date.now()}));state.dirty=false;}catch(e){console.warn(e);setStatus('Autosave full');}}
+  function saveLocal(){try{localStorage.setItem(LS_KEY, JSON.stringify({pages:state.pages,current:state.current,mode:state.mode,savedAt:Date.now()}));state.dirty=false;}catch(e){console.warn(e);setStatus('Local autosave failed');}}
   function setup(){ if(!loadLocal()) state.pages=[defaultPage()]; resizeCanvas(page().height); renderAll(); bind(); applyZoom(); setMode(state.mode); setTool('pen'); initStoredHandle(); updateDriveUi(); setTimeout(()=>el('modal').classList.add('show'),350); setTimeout(()=>autoReconnectDrive(),250); }
   function resizeCanvas(h){canvas.width=W; canvas.height=h; canvas.style.width=W+'px'; canvas.style.height=h+'px'; board.style.height=h+'px'; board.style.minHeight=h+'px';}
   function ensureHeight(y){ if(y>page().height-220){ page().height += GROW_BY; resizeCanvas(page().height); redraw(); renderImages(); renderTexts(); markDirty(); }}
@@ -418,6 +438,7 @@
   async function cloudSaveProject(silent=false, retrying=false){
     if(driveState.busy) return;
     driveState.busy = true;
+    setStatus('Saving to Google Drive…');
     try{
       const content = JSON.stringify(projectPayload(), null, 2);
       const metadata = {
@@ -452,13 +473,13 @@
       localStorage.setItem(DRIVE_FILE_NAME_KEY, driveState.fileName);
       saveLocal();
       state.dirty = false;
-      setStatus(silent ? 'Auto-saved to Google Drive' : 'Saved to Google Drive');
       if(!silent) toast('Saved to Google Drive');
       updateDriveUi();
+      setStatus('Saved to Google Drive');
     }catch(e){
       console.warn(e);
+      setStatus('Drive save failed — check your connection');
       if(!silent) alert(e.message || 'Could not save to Google Drive.');
-      setStatus('Drive save failed');
     }finally{ driveState.busy = false; }
   }
   function scheduleCloudAutosave(){
