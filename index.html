@@ -138,7 +138,7 @@
   .modalBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}.modalBackdrop.show{display:flex}.modal{background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 28px 80px rgba(15,23,42,.35);max-width:560px;width:100%;overflow:hidden}.modal h3{margin:0;font-size:17px}.modalTop{padding:16px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}.modalBody{padding:18px;color:#475569;font-size:14px;line-height:1.5}.modalActions{display:flex;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e2e8f0;background:#f8fafc}.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#eef2f7;border:1px solid #dbe4ef;border-radius:6px;padding:1px 5px;font-size:12px;color:#334155}
   @media (max-width: 980px){:root{--sideW:0px}.sidebar{display:none}.brand{min-width:160px}.topbar{gap:7px}.btn{padding:8px 9px}.seg button{padding:7px 10px}.toolbar{padding:9px}.control label{display:none}}
 
-  .drawLayer{will-change:contents}
+  .drawLayer{will-change:contents;touch-action:none;cursor:crosshair}
   .canvasArea, .board, .drawLayer{contain:layout paint style}
   .focusDock{will-change:left,top}
 
@@ -368,6 +368,12 @@
   let projectHandle = null;
   let driveSaveTimer = null;
   let cloudSaveTimer = null;
+  let localSaveTimer = null;
+  let scrollGrowFrame = 0;
+  let lastUserActivityAt = performance.now();
+  let jsonWorker = null;
+  let jsonWorkerSeq = 0;
+  const jsonWorkerJobs = new Map();
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const DRIVE_FILE_ID_KEY = 'sat_canvas_cloud_drive_file_id_v1';
   const DRIVE_FILE_NAME_KEY = 'sat_canvas_cloud_drive_file_name_v1';
@@ -386,10 +392,10 @@
   };
   const state = {
     folders: [], pages: [], current: 0, tool: 'pen', color:'#0f172a', size:8, mode:'paper', zoom:'fit', activeView:'canvas',
-    drawing:false, currentStroke:null, history:[], redo:[], selectedImageId:null, selectedTextId:null, dirty:false, drawRect:null, drawFrameId:0, drawnPointCount:0
+    drawing:false, currentStroke:null, history:[], redo:[], selectedImageId:null, selectedTextId:null, dirty:false, drawRect:null, drawFrameId:0, drawnPointCount:0, lastDrawPoint:null
   };
   const el = id => document.getElementById(id);
-  const canvas = el('drawCanvas'); const ctx = canvas.getContext('2d');
+  const canvas = el('drawCanvas'); let ctx = canvas.getContext('2d', {alpha:true, desynchronized:true}); if(!ctx) ctx = canvas.getContext('2d');
   const board = el('board'); const paperWrap = el('paperWrap'); const canvasArea = el('canvasArea');
   const imageLayer = el('imageLayer'); const textLayer = el('textLayer');
   const status = el('status');
@@ -414,6 +420,7 @@
     state.pages.forEach(p=>{
       if(!p.folderId || !valid.has(p.folderId)) p.folderId=state.folders[0].id;
       if(!Array.isArray(p.strokes)) p.strokes=[];
+      p.strokes.forEach(s=>{if(!s.id)s.id=uid();});
       if(!Array.isArray(p.images)) p.images=[];
       if(!Array.isArray(p.texts)) p.texts=[];
     });
@@ -457,9 +464,35 @@
     if(view==='canvas') setTimeout(applyZoom,40);
   }
   function uid(){return 'id_' + Math.random().toString(36).slice(2) + Date.now().toString(36)}
+  function serializePayloadAsync(payload){
+    if(typeof Worker==='undefined') return Promise.resolve(JSON.stringify(payload,null,2));
+    if(!jsonWorker){
+      const code=`self.onmessage=e=>{try{postMessage({id:e.data.id,json:JSON.stringify(e.data.payload,null,2)})}catch(err){postMessage({id:e.data.id,error:String(err)})}}`;
+      const blob=new Blob([code],{type:'application/javascript'});
+      jsonWorker=new Worker(URL.createObjectURL(blob));
+      jsonWorker.onmessage=e=>{
+        const job=jsonWorkerJobs.get(e.data.id); if(!job) return;
+        jsonWorkerJobs.delete(e.data.id);
+        if(e.data.error) job.reject(new Error(e.data.error)); else job.resolve(e.data.json);
+      };
+    }
+    return new Promise((resolve,reject)=>{ const id=++jsonWorkerSeq; jsonWorkerJobs.set(id,{resolve,reject}); jsonWorker.postMessage({id,payload}); });
+  }
   function page(){return state.pages[state.current]}
   function toast(msg){const t=el('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._to);t._to=setTimeout(()=>t.classList.remove('show'),1800)}
-  function markDirty(){state.dirty=true; savePreferences();setStatus(driveState.fileId?'Changes pending · Drive autosave queued':(projectHandle?'Changes pending · local file autosave queued':'Changes pending · local autosave')); clearTimeout(markDirty._t); markDirty._t=setTimeout(saveLocal,220); scheduleLinkedAutosave(); scheduleCloudAutosave();}
+  function runWhenIdle(task, minIdle=900){
+    const attempt=()=>{
+      const idleFor=performance.now()-lastUserActivityAt;
+      if(state.drawing || idleFor<minIdle){ setTimeout(attempt, Math.max(50, minIdle-idleFor)); return; }
+      if('requestIdleCallback' in window){ requestIdleCallback(()=>task(), {timeout:2200}); } else { setTimeout(task, 0); }
+    };
+    attempt();
+  }
+  function scheduleLocalAutosave(){
+    clearTimeout(localSaveTimer);
+    localSaveTimer=setTimeout(()=>runWhenIdle(()=>saveLocal(),1200),1500);
+  }
+  function markDirty(){state.dirty=true;setStatus(driveState.fileId?'Changes pending · Drive autosave queued':(projectHandle?'Changes pending · local file autosave queued':'Changes pending · local autosave')); scheduleLocalAutosave(); scheduleLinkedAutosave(); scheduleCloudAutosave();}
   function setStatus(s){
     status.textContent=s;
     const lower=String(s).toLowerCase();
@@ -496,10 +529,23 @@
     setTimeout(()=>autoReconnectDrive(),250);
   }
   function resizeCanvas(h){canvas.width=W; canvas.height=h; canvas.style.width=W+'px'; canvas.style.height=h+'px'; board.style.height=h+'px'; board.style.minHeight=h+'px';}
-  function ensureHeight(y){ if(y>page().height-220){ page().height += GROW_BY; resizeCanvas(page().height); redraw(); renderImages(); renderTexts(); markDirty(); }}
+  function ensureHeight(y){
+    if(y>page().height-220){
+      page().height += GROW_BY;
+      resizeCanvas(page().height);
+      redraw();
+      if(state.drawing && state.currentStroke) drawStroke(state.currentStroke);
+    }
+  }
   function redraw(){ const p=page(); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.lineCap='round'; ctx.lineJoin='round'; p.strokes.forEach(drawStroke); }
-  function drawStroke(s){ if(!s.points || s.points.length<1) return; ctx.save(); ctx.globalCompositeOperation = s.tool==='eraser' ? 'destination-out' : 'source-over'; ctx.globalAlpha = s.tool==='highlighter' ? 0.28 : 1; ctx.strokeStyle=s.color; ctx.lineWidth=s.tool==='highlighter' ? s.size*2.3 : s.size; ctx.beginPath(); ctx.moveTo(s.points[0].x,s.points[0].y); for(let i=1;i<s.points.length;i++){ const a=s.points[i-1], b=s.points[i]; const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; ctx.quadraticCurveTo(a.x,a.y,mx,my); } if(s.points.length===1){ctx.lineTo(s.points[0].x+.1,s.points[0].y+.1)} ctx.stroke(); ctx.restore(); }
+  function drawStroke(s){ if(!s.points || s.points.length<1) return; ctx.save(); beginStrokePaint(s); ctx.beginPath(); ctx.moveTo(s.points[0].x,s.points[0].y); for(let i=1;i<s.points.length;i++){ const p=s.points[i]; ctx.lineTo(p.x,p.y); } if(s.points.length===1){ctx.lineTo(s.points[0].x+.15,s.points[0].y+.15)} ctx.stroke(); ctx.restore(); }
   function renderAll(){resizeCanvas(page().height||MIN_H); redraw(); renderImages(); renderTexts(); renderPages(); setMode(page().mode||state.mode||'paper',false); applyZoom();}
+  function refreshCurrentPageMeta(){
+    const active=document.querySelector('.pageItem.active');
+    if(active){ const meta=active.querySelector('.pageName span'); if(meta){ const p=page(); meta.textContent=`${p.images.length} images · ${p.strokes.length} strokes`; } }
+    const summary=el('notebookSummary');
+    if(summary){ const visible=state.pages.length; summary.textContent=`${visible} page${visible===1?'':'s'} · ${state.folders.length} folder${state.folders.length===1?'':'s'}`; }
+  }
   function renderPages(){
     const list=el('pageList'); if(!list)return; list.innerHTML='';
     const q=(el('pageSearch')?.value||'').trim().toLowerCase(); let visiblePages=0;
@@ -544,58 +590,117 @@
     ctx.lineWidth = s.tool==='highlighter' ? s.size*2.3 : s.size;
     ctx.lineCap='round'; ctx.lineJoin='round';
   }
-  function flushCurrentStroke(){
-    state.drawFrameId=0;
-    const s=state.currentStroke;
-    if(!state.drawing || !s || !s.points.length) return;
-    const pts=s.points;
-    const start=Math.max(1,state.drawnPointCount);
-    if(start>=pts.length) return;
-    styleActiveStroke(s);
-    ctx.beginPath();
-    for(let i=start;i<pts.length;i++){ const a=pts[i-1], b=pts[i]; ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); }
-    ctx.stroke();
-    ctx.restore();
-    state.drawnPointCount=pts.length;
+  function beginStrokePaint(s){
+    ctx.globalCompositeOperation=s.tool==='eraser'?'destination-out':'source-over';
+    ctx.globalAlpha=s.tool==='highlighter'?0.28:1;
+    ctx.strokeStyle=s.color;
+    ctx.lineWidth=s.tool==='highlighter'?s.size*2.3:s.size;
+    ctx.lineCap='round'; ctx.lineJoin='round';
   }
-  function scheduleStrokeFrame(){ if(state.drawFrameId) return; state.drawFrameId=requestAnimationFrame(flushCurrentStroke); }
+  function getPointerSamples(e){ try{ const c=e.getCoalescedEvents?.(); return (c&&c.length)?c:[e]; }catch(_){ return [e]; } }
+  function drawSegment(from,to){ ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); }
   function startDraw(e){
     if(state.tool==='select') return;
     if(state.tool==='text'){ const pnt=boardPoint(e); addText(pnt.x,pnt.y); return; }
     e.preventDefault();
-    canvas.setPointerCapture(e.pointerId);
+    canvas.setPointerCapture?.(e.pointerId);
     state.drawRect=canvas.getBoundingClientRect();
     state.drawing=true;
-    state.drawnPointCount=1;
-    const pnt=boardPoint(e,state.drawRect);
-    ensureHeight(pnt.y);
-    state.currentStroke={tool:state.tool,color:state.color,size:Number(state.size),points:[pnt]};
-    drawStroke(state.currentStroke);
+    state.drawnPointCount=0;
+    const samples=getPointerSamples(e);
+    const first=boardPoint(samples[0],state.drawRect);
+    state.currentStroke={id:uid(),tool:state.tool,color:state.color,size:Number(state.size),points:[first]};
+    state.lastDrawPoint=first;
+    beginStrokePaint(state.currentStroke);
+    ctx.beginPath();
+    ctx.moveTo(first.x,first.y);
+    ctx.lineTo(first.x+0.15,first.y+0.15);
+    ctx.stroke();
+    ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+    for(let i=1;i<samples.length;i++) drawImmediateSample(samples[i]);
+    if(first.y>page().height-220) ensureHeight(first.y);
+  }
+  function drawImmediateSample(ev){
+    const pnt=boardPoint(ev,state.drawRect);
+    const prev=state.lastDrawPoint||pnt;
+    state.currentStroke.points.push(pnt);
+    beginStrokePaint(state.currentStroke);
+    ctx.beginPath(); drawSegment(prev,pnt); ctx.stroke();
+    ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+    state.lastDrawPoint=pnt;
   }
   function moveDraw(e){
     if(!state.drawing||!state.currentStroke) return;
-    const pnt=boardPoint(e,state.drawRect);
-    ensureHeight(pnt.y);
-    state.currentStroke.points.push(pnt);
-    scheduleStrokeFrame();
+    const samples=getPointerSamples(e);
+    if(!samples.length) return;
+    beginStrokePaint(state.currentStroke);
+    ctx.beginPath();
+    let prev=state.lastDrawPoint;
+    for(const sample of samples){
+      const pnt=boardPoint(sample,state.drawRect);
+      state.currentStroke.points.push(pnt);
+      if(prev) drawSegment(prev,pnt);
+      prev=pnt;
+    }
+    ctx.stroke();
+    ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+    state.lastDrawPoint=prev;
+    if(prev && prev.y>page().height-220) ensureHeight(prev.y);
+  }
+  function recordStrokeAction(kind,stroke,index){
+    state.history.push({kind,pageId:page().id,stroke,index});
+    if(state.history.length>60) state.history.shift();
+    state.redo=[];
+  }
+  function applyStrokeAction(action,redoing){
+    const target=state.pages.find(p=>p.id===action.pageId); if(!target) return false;
+    if(action.kind==='stroke-add'){
+      if(redoing) target.strokes.splice(Math.min(action.index,target.strokes.length),0,action.stroke);
+      else { const idx=target.strokes.findIndex(s=>s.id===action.stroke.id); if(idx>=0) target.strokes.splice(idx,1); }
+    }else if(action.kind==='stroke-remove'){
+      if(redoing){ const idx=target.strokes.findIndex(s=>s.id===action.stroke.id); if(idx>=0) target.strokes.splice(idx,1); }
+      else target.strokes.splice(Math.min(action.index,target.strokes.length),0,action.stroke);
+    }else return false;
+    if(target.id===page().id){ redraw(); refreshCurrentPageMeta(); }
+    return true;
   }
   function endDraw(e){
     if(!state.drawing||!state.currentStroke) return;
-    if(state.drawFrameId){ cancelAnimationFrame(state.drawFrameId); state.drawFrameId=0; }
-    flushCurrentStroke();
+    try{canvas.releasePointerCapture?.(e.pointerId);}catch(_){ }
     state.drawing=false;
     state.drawRect=null;
-    pushHistory();
-    page().strokes.push(state.currentStroke);
+    state.lastDrawPoint=null;
+    const stroke=state.currentStroke;
     state.currentStroke=null;
-    redraw();
+    const p=page();
+    const index=p.strokes.length;
+    p.strokes.push(stroke);
+    recordStrokeAction('stroke-add',stroke,index);
+    refreshCurrentPageMeta();
     markDirty();
-    renderPages();
   }
   function pushHistory(){ state.history.push(JSON.stringify(page())); if(state.history.length>45) state.history.shift(); state.redo=[]; }
   function restorePageFrom(raw){ const id=page().id; const name=page().name; const restored=JSON.parse(raw); if(!restored.id) restored.id=id; if(!restored.name) restored.name=name; state.pages[state.current]=restored; renderAll(); markDirty(); }
-  function undo(){ if(state.history.length===0) return; state.redo.push(JSON.stringify(page())); restorePageFrom(state.history.pop()); toast('Undone'); }
-  function redo(){ if(state.redo.length===0) return; state.history.push(JSON.stringify(page())); restorePageFrom(state.redo.pop()); toast('Redone'); }
+  function undo(){
+    if(state.history.length===0) return;
+    const action=state.history.pop();
+    if(action && typeof action==='object' && action.kind && action.kind.startsWith('stroke-')){
+      if(applyStrokeAction(action,false)){ state.redo.push(action); markDirty(); toast('Undone'); }
+      return;
+    }
+    state.redo.push(JSON.stringify(page()));
+    restorePageFrom(action); toast('Undone');
+  }
+  function redo(){
+    if(state.redo.length===0) return;
+    const action=state.redo.pop();
+    if(action && typeof action==='object' && action.kind && action.kind.startsWith('stroke-')){
+      if(applyStrokeAction(action,true)){ state.history.push(action); markDirty(); toast('Redone'); }
+      return;
+    }
+    state.history.push(JSON.stringify(page()));
+    restorePageFrom(action); toast('Redone');
+  }
   function deleteLast(){
     const p=page();
     if(state.selectedImageId){
@@ -609,7 +714,7 @@
       pushHistory(); p.texts.splice(idx,1); state.selectedTextId=null; renderTexts(); renderPages(); markDirty(); toast('Deleted selected text'); return;
     }
     if(!p.strokes.length){ toast('Nothing to delete'); return; }
-    pushHistory(); p.strokes.pop(); redraw(); renderPages(); markDirty(); toast('Deleted last stroke');
+    const index=p.strokes.length-1; const stroke=p.strokes.pop(); recordStrokeAction('stroke-remove',stroke,index); redraw(); refreshCurrentPageMeta(); markDirty(); toast('Deleted last stroke');
   }
   function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
   function clearSelection(render=true){state.selectedImageId=null;state.selectedTextId=null;if(render){renderImages();renderTexts();}}
@@ -836,7 +941,7 @@
     driveState.busy = true;
     setStatus('Saving to Google Drive…');
     try{
-      const content = JSON.stringify(projectPayload(), null, 2);
+      const content = await serializePayloadAsync(projectPayload());
       const metadata = {
         name: driveState.fileName || 'SAT Canvas Studio Project.satcanvas',
         mimeType: 'application/json',
@@ -881,7 +986,7 @@
   function scheduleCloudAutosave(){
     if(!driveState.fileId || !driveState.accessToken) return;
     clearTimeout(cloudSaveTimer);
-    cloudSaveTimer = setTimeout(()=>cloudSaveProject(true), DRIVE_AUTOSAVE_MS);
+    cloudSaveTimer = setTimeout(()=>runWhenIdle(()=>cloudSaveProject(true),1400), DRIVE_AUTOSAVE_MS);
   }
   async function cloudListProjects(){
     const q = "appProperties has { key='satCanvasStudio' and value='true' } and trashed=false";
@@ -939,7 +1044,7 @@
   async function initStoredHandle(){ if(!filePickerSupported()){ setStatus('Use Download Copy'); return; } const h=await loadStoredHandle(); if(!h){ setStatus('Save As to Drive'); return; } try{ const perm=await h.queryPermission({mode:'readwrite'}); projectHandle=h; if(perm==='granted') setStatus('Linked: '+h.name); else setStatus('Click Save to relink'); }catch(e){ projectHandle=null; setStatus('Save As to Drive'); } }
   async function requestWrite(handle){ const opts={mode:'readwrite'}; if((await handle.queryPermission(opts))==='granted') return true; return (await handle.requestPermission(opts))==='granted'; }
   async function writeToHandle(handle, silent=false){ const writable=await handle.createWritable(); await writable.write(projectBlob()); await writable.close(); saveLocal(); state.dirty=false; if(!silent) toast('Saved to '+handle.name); setStatus(silent?'Auto-saved to file':'Saved to file'); }
-  function scheduleLinkedAutosave(){ if(!projectHandle) return; clearTimeout(driveSaveTimer); driveSaveTimer=setTimeout(async()=>{ try{ if((await projectHandle.queryPermission({mode:'readwrite'}))==='granted') await writeToHandle(projectHandle,true); }catch(e){ setStatus('Click Save'); } }, 2500); }
+  function scheduleLinkedAutosave(){ if(!projectHandle) return; clearTimeout(driveSaveTimer); driveSaveTimer=setTimeout(()=>runWhenIdle(async()=>{ try{ if((await projectHandle.queryPermission({mode:'readwrite'}))==='granted') await writeToHandle(projectHandle,true); }catch(e){ setStatus('Click Save'); } },1400), 3000); }
   async function saveProject(){
     if(projectHandle){ try{ if(await requestWrite(projectHandle)){ await writeToHandle(projectHandle,false); return; } }catch(e){ console.warn(e); } }
     await saveProjectAs();
@@ -988,9 +1093,16 @@
     document.addEventListener('click',e=>{ if(!e.target.closest('.focusMoreWrap')) el('focusMoreMenu').classList.remove('show'); });
     document.querySelectorAll('[data-focus-action]').forEach(b=>b.onclick=()=>{ const a=b.dataset.focusAction; el('focusMoreMenu').classList.remove('show'); if(a==='newPage') newPage(); if(a==='newFolder') createFolder(); if(a==='rename') renamePage(); if(a==='clear') clearPage(); if(a==='delete') deletePage(); if(a==='deleteLast') deleteLast(); if(a==='save') cloudSaveProject(false); if(a==='open') cloudOpenProject(); if(a==='download') downloadProjectCopy(); if(a==='export') exportPNG(); });
     window.addEventListener('resize',applyZoom);
-    canvas.addEventListener('pointerdown',startDraw); canvas.addEventListener('pointermove',moveDraw); canvas.addEventListener('pointerup',endDraw); canvas.addEventListener('pointercancel',endDraw);
+    canvas.style.touchAction='none';
+    document.addEventListener('pointerdown',()=>{lastUserActivityAt=performance.now();},{passive:true});
+    document.addEventListener('keydown',()=>{lastUserActivityAt=performance.now();},{passive:true});
+    canvas.addEventListener('pointerdown',startDraw,{passive:false});
+    const moveEvent=('onpointerrawupdate' in window)?'pointerrawupdate':'pointermove';
+    canvas.addEventListener(moveEvent,moveDraw,{passive:false});
+    canvas.addEventListener('pointerup',endDraw,{passive:false});
+    canvas.addEventListener('pointercancel',endDraw,{passive:false});
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
-    canvasArea.addEventListener('scroll',()=>{ const bottom=canvasArea.scrollTop+canvasArea.clientHeight; if(bottom > getCurrentScale()*page().height - 500){page().height+=GROW_BY; resizeCanvas(page().height); redraw(); renderImages(); renderTexts(); markDirty();}});
+    canvasArea.addEventListener('scroll',()=>{ if(scrollGrowFrame) return; scrollGrowFrame=requestAnimationFrame(()=>{ scrollGrowFrame=0; const bottom=canvasArea.scrollTop+canvasArea.clientHeight; if(bottom > getCurrentScale()*page().height - 500){ page().height+=GROW_BY; resizeCanvas(page().height); redraw(); } }); },{passive:true});
     document.addEventListener('paste',async e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items) return; for(const item of items){ if(item.type.startsWith('image/')){ e.preventDefault(); const f=item.getAsFile(); addImage(await fileToDataURL(f),120,120); } } });
     canvasArea.addEventListener('dragover',e=>{e.preventDefault();}); canvasArea.addEventListener('drop',async e=>{e.preventDefault(); if(e.dataTransfer.files.length) await addImageFiles(e.dataTransfer.files);});
     el('imageBtn').onclick=()=>el('imageInput').click(); el('imageInput').onchange=e=>addImageFiles(e.target.files); el('openBtn').onclick=openProjectPicker; el('fileInput').onchange=e=>{ if(e.target.files[0]) openProjectFile(e.target.files[0]);};
