@@ -90,7 +90,7 @@
   input[type="color"]{width:31px;height:31px;border:0;background:transparent;padding:0;border-radius:10px;overflow:hidden;cursor:pointer}
   .select{height:30px;border:0;background:#f8fafc;border-radius:9px;padding:0 8px;font-weight:800;font-size:12px;color:#334155}
 
-  .canvasArea{position:relative;min-height:0;overflow:auto;padding:26px 28px 80px;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.72),transparent 34%),#e9eef6}
+  .canvasArea{position:relative;min-height:0;overflow:auto;padding:26px 28px 80px;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.72),transparent 34%),#e9eef6;overscroll-behavior:contain;scroll-behavior:auto}
   .canvasArea.boardMode{background:#0a0f1e}
   .paperWrap{width:max-content;margin:0 auto;transform-origin:top center;position:relative;transition:transform .14s ease}
   .board{position:relative;width:1400px;min-height:1700px;border-radius:22px;box-shadow:var(--shadow);overflow:hidden;border:1px solid #d7e0eb;background-color:#fff;background-image:linear-gradient(#e6edf5 1px,transparent 1px),linear-gradient(90deg,#e6edf5 1px,transparent 1px);background-size:36px 36px}
@@ -780,6 +780,36 @@
   function startMoveText(e,t,d){ e.stopPropagation(); pushHistory(); const sx=e.clientX,sy=e.clientY,ox=t.x,oy=t.y,scale=getCurrentScale(); function mm(ev){t.x=ox+(ev.clientX-sx)/scale;t.y=oy+(ev.clientY-sy)/scale;d.style.left=t.x+'px';d.style.top=t.y+'px';ensureHeight(t.y+120)} function up(){window.removeEventListener('pointermove',mm);window.removeEventListener('pointerup',up);markDirty();} window.addEventListener('pointermove',mm); window.addEventListener('pointerup',up); }
   function getCurrentScale(){ const m=paperWrap.style.transform.match(/scale\(([^)]+)\)/); return m?Number(m[1]):1; }
   function applyZoom(){ let z=state.zoom; let scale; if(z==='fit'){ const available=Math.max(500,canvasArea.clientWidth-80); scale=Math.min(1,available/W); } else scale=Number(z); paperWrap.style.transform=`scale(${scale})`; paperWrap.style.marginBottom = Math.max(80, page().height*(scale-1)+80)+'px'; }
+  function maybeGrowCanvasForScroll(force=false){
+    const p=page();
+    if(!p) return;
+    const visualBottom = canvasArea.scrollTop + canvasArea.clientHeight;
+    const scaledHeight = getCurrentScale() * (p.height || MIN_H);
+    if(force || visualBottom > scaledHeight - 650){
+      const oldH = p.height || MIN_H;
+      p.height = oldH + GROW_BY;
+      resizeCanvas(p.height);
+      redraw();
+      renderImages();
+      renderTexts();
+      // Do not autosave merely because extra blank workspace was prepared.
+      refreshCurrentPageMeta();
+    }
+  }
+  function handleCanvasWheel(e){
+    // Chromebook trackpads/touchscreens can have their scroll swallowed by the
+    // drawing canvas because the canvas must use touch-action:none for clean ink.
+    // Manually scroll the workspace when the pointer is over the drawing area.
+    if(e.ctrlKey) return; // preserve pinch/browser zoom gestures
+    if(state.drawing) return;
+    const dx = Number(e.deltaX) || 0;
+    const dy = Number(e.deltaY) || 0;
+    if(!dx && !dy) return;
+    e.preventDefault();
+    if(e.shiftKey && Math.abs(dy) > Math.abs(dx)) canvasArea.scrollLeft += dy;
+    else { canvasArea.scrollTop += dy; canvasArea.scrollLeft += dx; }
+    maybeGrowCanvasForScroll(false);
+  }
   function projectPayload(){ return {app:'SAT Canvas Studio',version:3,savedAt:new Date().toISOString(),folders:state.folders,pages:state.pages,current:state.current,mode:state.mode}; }
   function projectBlob(){ return new Blob([JSON.stringify(projectPayload(),null,2)],{type:'application/json'}); }
   function googleClientId(){
@@ -1149,7 +1179,10 @@
     canvas.addEventListener('mouseup',e=>{if(state.drawing)endDraw(e);},{passive:false});
     window.addEventListener('blur',()=>{if(state.drawing)endDraw({preventDefault(){}});});
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
-    canvasArea.addEventListener('scroll',()=>{ if(scrollGrowFrame) return; scrollGrowFrame=requestAnimationFrame(()=>{ scrollGrowFrame=0; const bottom=canvasArea.scrollTop+canvasArea.clientHeight; if(bottom > getCurrentScale()*page().height - 500){ page().height+=GROW_BY; resizeCanvas(page().height); redraw(); } }); },{passive:true});
+    canvasArea.addEventListener('scroll',()=>{ if(scrollGrowFrame) return; scrollGrowFrame=requestAnimationFrame(()=>{ scrollGrowFrame=0; maybeGrowCanvasForScroll(false); }); },{passive:true});
+    canvasArea.addEventListener('wheel',handleCanvasWheel,{passive:false});
+    board.addEventListener('wheel',handleCanvasWheel,{passive:false});
+    canvas.addEventListener('wheel',handleCanvasWheel,{passive:false});
     document.addEventListener('paste',async e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items) return; for(const item of items){ if(item.type.startsWith('image/')){ e.preventDefault(); const f=item.getAsFile(); addImage(await fileToDataURL(f),120,120); } } });
     canvasArea.addEventListener('dragover',e=>{e.preventDefault();}); canvasArea.addEventListener('drop',async e=>{e.preventDefault(); if(e.dataTransfer.files.length) await addImageFiles(e.dataTransfer.files);});
     el('imageBtn').onclick=()=>el('imageInput').click(); el('imageInput').onchange=e=>addImageFiles(e.target.files); el('openBtn').onclick=openProjectPicker; el('fileInput').onchange=e=>{ if(e.target.files[0]) openProjectFile(e.target.files[0]);};
