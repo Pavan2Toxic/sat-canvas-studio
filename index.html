@@ -91,12 +91,29 @@
   body.focus-mode .topbar,body.focus-mode .sidebar,body.focus-mode .toolbar{display:none}
   body.focus-mode .main{grid-template-columns:1fr}
   body.focus-mode .workspace{grid-template-rows:1fr}
-  body.focus-mode .canvasArea{padding:18px 18px 70px}
-  .focusDock{position:fixed;left:16px;top:16px;display:none;align-items:center;gap:4px;padding:5px;background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.10);border-radius:14px;box-shadow:0 16px 35px rgba(0,0,0,.28);z-index:120}
+  body.focus-mode .canvasArea{padding:18px 18px 132px}
+  body.focus-mode .desmosView,body.focus-mode .refView{padding-bottom:112px}
+  .focusDock{position:fixed;left:50%;bottom:14px;top:auto;transform:translateX(-50%);display:none;align-items:center;gap:6px;padding:7px 8px;background:rgba(15,23,42,.96);border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 18px 42px rgba(0,0,0,.34);z-index:120;max-width:calc(100vw - 20px);overflow:visible;color:#fff}
   body.focus-mode .focusDock{display:flex}
-  .focusDock button{border:0;background:transparent;color:#e2e8f0;border-radius:9px;padding:7px 9px;font-size:11px;font-weight:800;cursor:pointer}
-  .focusDock button.active{background:#fff;color:#0f172a}
-  .focusDock .exitFocus{margin-left:2px;background:#334155}
+  .focusDock.dragging{transition:none}
+  .focusGrip{width:24px;height:30px;border:0;background:transparent;color:#94a3b8;border-radius:9px;cursor:grab;display:grid;place-items:center;font-size:14px;letter-spacing:-2px;line-height:1;flex:0 0 auto;touch-action:none}
+  .focusGrip:active{cursor:grabbing}
+  .focusGroup{display:flex;align-items:center;gap:4px;min-width:0}
+  .focusToolBtn,.focusViewBtn,.focusActionBtn{width:32px;height:32px;border:0;background:transparent;color:#dbe5f2;border-radius:9px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
+  .focusToolBtn:hover,.focusViewBtn:hover,.focusActionBtn:hover{background:rgba(255,255,255,.09)}
+  .focusToolBtn.active,.focusViewBtn.active{background:#fff;color:#0f172a}
+  .focusToolBtn svg,.focusViewBtn svg,.focusActionBtn svg{width:17px;height:17px}
+  .focusDivider{width:1px;height:24px;background:rgba(255,255,255,.13);margin:0 2px;flex:0 0 auto}
+  .focusColor{width:26px;height:26px;border:1px solid rgba(255,255,255,.25);border-radius:8px;background:transparent;padding:0;cursor:pointer;overflow:hidden}
+  .focusSize{width:68px;accent-color:#fff}
+  .focusSelect{height:30px;max-width:86px;border:0;background:rgba(255,255,255,.08);border-radius:9px;padding:0 7px;color:#e2e8f0;font-size:10px;font-weight:800;cursor:pointer}
+  .focusSelect option{color:#0f172a;background:#fff}
+  .focusMoreWrap{position:relative;display:flex;align-items:center}
+  .focusMoreMenu{position:absolute;left:0;bottom:calc(100% + 10px);min-width:180px;background:rgba(15,23,42,.98);border:1px solid rgba(255,255,255,.12);border-radius:13px;box-shadow:0 18px 40px rgba(0,0,0,.34);padding:6px;display:none}
+  .focusMoreMenu.show{display:block}
+  .focusMoreMenu button{width:100%;border:0;background:transparent;color:#e2e8f0;border-radius:9px;padding:9px 10px;text-align:left;font-size:11px;font-weight:800;cursor:pointer}
+  .focusMoreMenu button:hover{background:rgba(255,255,255,.08)}
+  @media (max-width: 900px){.focusDock{bottom:10px;gap:4px;padding:6px;}.focusSize{width:54px}.focusSelect{max-width:72px}.focusToolBtn,.focusViewBtn,.focusActionBtn{width:30px;height:30px}}
   @media (max-width: 1150px){.brand{min-width:155px}.brandText span{display:none}.status{min-width:118px}.toolbar .control label{display:none}.btn{padding:7px 8px}}
   .modalBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}.modalBackdrop.show{display:flex}.modal{background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 28px 80px rgba(15,23,42,.35);max-width:560px;width:100%;overflow:hidden}.modal h3{margin:0;font-size:17px}.modalTop{padding:16px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}.modalBody{padding:18px;color:#475569;font-size:14px;line-height:1.5}.modalActions{display:flex;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e2e8f0;background:#f8fafc}.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#eef2f7;border:1px solid #dbe4ef;border-radius:6px;padding:1px 5px;font-size:12px;color:#334155}
   @media (max-width: 900px){:root{--sideW:0px}.sidebar{display:none}.brand{min-width:160px}.topbar{gap:7px}.btn{padding:8px 9px}.seg button{padding:7px 10px}.toolbar{padding:9px}.control label{display:none}}
@@ -127,11 +144,45 @@
     <button id="focusBtn" class="btn" title="Hide the app chrome and focus on your work">Focus</button>
     <div id="status" class="status">Ready</div>
   </header>
-  <div id="focusDock" class="focusDock" aria-label="Focus controls">
-    <button data-focus-view="canvas" class="active">Canvas</button>
-    <button data-focus-view="desmos">Desmos</button>
-    <button data-focus-view="reference">Reference</button>
-    <button id="exitFocusBtn" class="exitFocus">Exit Focus</button>
+  <div id="focusDock" class="focusDock" aria-label="Focus workspace controls">
+    <button id="focusGrip" class="focusGrip" title="Drag to move the focus toolbar" aria-label="Drag toolbar">⋮⋮</button>
+    <div class="focusGroup" aria-label="Drawing tools">
+      <button class="focusToolBtn active" data-tool="pen" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+      <button class="focusToolBtn" data-tool="highlighter" title="Highlighter" aria-label="Highlighter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 6 6"/><path d="m5 19 5-1 9-9a2.1 2.1 0 0 0-3-3l-9 9-2 4Z"/><path d="m14 6 4 4"/></svg></button>
+      <button class="focusToolBtn" data-tool="eraser" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 21-4-4 12-12a2.8 2.8 0 0 1 4 4L8 20Z"/><path d="M14 7 6 15"/><path d="M11 21h10"/></svg></button>
+      <button class="focusToolBtn" data-tool="select" title="Move or resize image" aria-label="Select"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3 10 21l2-8 8-2Z"/></svg></button>
+      <button class="focusToolBtn" data-tool="text" title="Text" aria-label="Text"><b>T</b></button>
+      <input id="focusColorPicker" class="focusColor" type="color" value="#0f172a" title="Color" aria-label="Color">
+      <input id="focusSizeSlider" class="focusSize" type="range" min="2" max="42" value="8" title="Size" aria-label="Size">
+      <select id="focusZoomSelect" class="focusSelect" title="Zoom" aria-label="Zoom"><option value="fit">Fit</option><option value="0.75">75%</option><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select>
+      <select id="focusModeSelect" class="focusSelect" title="Board mode" aria-label="Board mode"><option value="paper">Paper</option><option value="board">Blackboard</option></select>
+    </div>
+    <div class="focusDivider"></div>
+    <div class="focusGroup" aria-label="Actions">
+      <button id="focusUndoBtn" class="focusActionBtn" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M5 9h9a6 6 0 0 1 6 6v1"/></svg></button>
+      <button id="focusRedoBtn" class="focusActionBtn" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 14 5-5-5-5"/><path d="M19 9h-9a6 6 0 0 0-6 6v1"/></svg></button>
+      <button id="focusImageBtn" class="focusActionBtn" title="Add image" aria-label="Add image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button>
+    </div>
+    <div class="focusDivider"></div>
+    <div class="focusGroup" aria-label="View shortcuts">
+      <button data-focus-view="canvas" class="focusViewBtn active" title="Canvas" aria-label="Canvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20 6 4l11 1-2 16Z"/><path d="M7 8h7"/><path d="M7 12h5"/></svg></button>
+      <button data-focus-view="desmos" class="focusViewBtn" title="Desmos" aria-label="Desmos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18c4-9 7-10 10-5s5 6 8-5"/><path d="M5 20V4"/></svg></button>
+      <button data-focus-view="reference" class="focusViewBtn" title="Reference" aria-label="Reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 19 7-14 7 14"/><path d="M8 14h8"/><path d="M9 8h6"/></svg></button>
+      <div class="focusMoreWrap">
+        <button id="focusMoreBtn" class="focusViewBtn" title="More" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
+        <div id="focusMoreMenu" class="focusMoreMenu">
+          <button data-focus-action="newPage">New page</button>
+          <button data-focus-action="rename">Rename page</button>
+          <button data-focus-action="clear">Clear page</button>
+          <button data-focus-action="delete">Delete page</button>
+          <button data-focus-action="save">Save to Drive</button>
+          <button data-focus-action="open">Open from Drive</button>
+          <button data-focus-action="download">Download backup</button>
+          <button data-focus-action="export">Export PNG</button>
+        </div>
+      </div>
+      <button id="exitFocusBtn" class="focusViewBtn" title="Exit Focus" aria-label="Exit Focus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 8 4 4"/><path d="M4 9V4h5"/><path d="M16 16l4 4"/><path d="M20 15v5h-5"/><path d="M16 8l4-4"/><path d="M20 9V4h-5"/><path d="M8 16l-4 4"/><path d="M4 15v5h5"/></svg></button>
+    </div>
   </div>
   <main class="main">
     <aside class="sidebar">
@@ -200,6 +251,7 @@
   const DRIVE_AUTHORIZED_KEY = 'sat_canvas_cloud_drive_authorized_v1';
   const DRIVE_ACCOUNT_EMAIL_KEY = 'sat_canvas_cloud_drive_account_email_v1';
   const PREFS_KEY = 'sat_canvas_studio_prefs_v1';
+  const FOCUS_DOCK_KEY = 'sat_canvas_studio_focus_dock_v1';
   const DRIVE_AUTOSAVE_MS = 3500;
   const driveState = {
     tokenClient: null,
@@ -264,6 +316,8 @@
     el('sizeVal').textContent=state.size;
     el('zoomSelect').value=state.zoom;
     el('modeSelect').value=page().mode||state.mode;
+    syncFocusControls();
+    setupFocusDock();
     initStoredHandle(); updateDriveUi();
     setTimeout(()=>el('modal').classList.add('show'),350);
     setTimeout(()=>autoReconnectDrive(),250);
@@ -284,9 +338,42 @@
   function restorePageFrom(raw){ const id=page().id; const name=page().name; const restored=JSON.parse(raw); if(!restored.id) restored.id=id; if(!restored.name) restored.name=name; state.pages[state.current]=restored; renderAll(); markDirty(); }
   function undo(){ if(state.history.length===0) return; state.redo.push(JSON.stringify(page())); restorePageFrom(state.history.pop()); toast('Undone'); }
   function redo(){ if(state.redo.length===0) return; state.history.push(JSON.stringify(page())); restorePageFrom(state.redo.pop()); toast('Redone'); }
-  function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('.toolBtn').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
+  function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
   function clearSelection(render=true){state.selectedImageId=null;state.selectedTextId=null;if(render){renderImages();renderTexts();}}
-  function setMode(m,persist=true){ state.mode=m; page().mode=m; preferences.mode=m; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff'; state.color='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a'; state.color='#0f172a';} if(persist){savePreferences(); markDirty();} }
+  function setMode(m,persist=true){ state.mode=m; page().mode=m; preferences.mode=m; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff'; if(el('focusColorPicker')) el('focusColorPicker').value='#ffffff'; state.color='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a'; if(el('focusColorPicker')) el('focusColorPicker').value='#0f172a'; state.color='#0f172a';} if(el('modeSelect')) el('modeSelect').value=m; if(el('focusModeSelect')) el('focusModeSelect').value=m; if(persist){savePreferences(); markDirty();} }
+  function syncFocusControls(){
+    if(el('focusColorPicker')) el('focusColorPicker').value=state.color;
+    if(el('focusSizeSlider')) el('focusSizeSlider').value=state.size;
+    if(el('focusZoomSelect')) el('focusZoomSelect').value=state.zoom;
+    if(el('focusModeSelect')) el('focusModeSelect').value=state.mode;
+  }
+  function loadFocusDockPosition(){
+    try{ const raw=localStorage.getItem(FOCUS_DOCK_KEY); if(raw){ const p=JSON.parse(raw); if(Number.isFinite(p.left)&&Number.isFinite(p.top)){ el('focusDock').style.left=p.left+'px'; el('focusDock').style.top=p.top+'px'; el('focusDock').style.bottom='auto'; el('focusDock').style.transform='none'; el('focusDock').dataset.positioned='1'; } } }catch(e){}
+  }
+  function saveFocusDockPosition(){
+    const d=el('focusDock'); const r=d.getBoundingClientRect(); try{localStorage.setItem(FOCUS_DOCK_KEY,JSON.stringify({left:Math.round(r.left),top:Math.round(r.top)}));}catch(e){}
+  }
+  function clampFocusDock(left,top){
+    const d=el('focusDock'); const r=d.getBoundingClientRect(); const maxL=Math.max(6,window.innerWidth-r.width-6); const maxT=Math.max(6,window.innerHeight-r.height-6); return {left:Math.min(Math.max(6,left),maxL),top:Math.min(Math.max(6,top),maxT)};
+  }
+  function setupFocusDock(){
+    loadFocusDockPosition();
+    const dock=el('focusDock'), grip=el('focusGrip');
+    let drag=null;
+    grip.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      const r=dock.getBoundingClientRect();
+      dock.style.left=r.left+'px'; dock.style.top=r.top+'px'; dock.style.bottom='auto'; dock.style.transform='none'; dock.dataset.positioned='1';
+      drag={sx:e.clientX,sy:e.clientY,left:r.left,top:r.top};
+      dock.classList.add('dragging');
+      grip.setPointerCapture?.(e.pointerId);
+    });
+    window.addEventListener('pointermove',e=>{
+      if(!drag) return; const p=clampFocusDock(drag.left+(e.clientX-drag.sx),drag.top+(e.clientY-drag.sy)); dock.style.left=p.left+'px'; dock.style.top=p.top+'px';
+    });
+    window.addEventListener('pointerup',()=>{ if(!drag) return; drag=null; dock.classList.remove('dragging'); saveFocusDockPosition(); });
+    window.addEventListener('resize',()=>{ if(!dock.dataset.positioned) return; const r=dock.getBoundingClientRect(); const p=clampFocusDock(r.left,r.top); dock.style.left=p.left+'px'; dock.style.top=p.top+'px'; saveFocusDockPosition(); });
+  }
   function addImage(src,x=110,y=110,w=640,h=null){ const img = new Image(); img.onload=()=>{ const ratio=img.width/img.height||1; const finalW=w; const finalH=h || Math.round(w/ratio); pushHistory(); const obj={id:uid(),src,x,y,w:finalW,h:finalH,z:Date.now()}; page().images.push(obj); ensureHeight(y+finalH+400); state.selectedImageId=obj.id; setTool('select'); renderImages(); renderPages(); markDirty(); toast('Image added'); }; img.src=src; }
   function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
   async function addImageFiles(files){ for(const file of Array.from(files)){ if(file.type.startsWith('image/')) addImage(await fileToDataURL(file),90,90); } }
@@ -626,16 +713,26 @@
   function clearPage(){ if(confirm('Clear this page?')){pushHistory(); page().strokes=[];page().images=[];page().texts=[];renderAll();markDirty();}}
   function bind(){
     document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setView(b.dataset.view));
-    document.querySelectorAll('[data-focus-view]').forEach(b=>b.onclick=()=>setView(b.dataset.focusView));
-    document.querySelectorAll('.toolBtn').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-    el('colorPicker').oninput=e=>{state.color=e.target.value; preferences.color=state.color; savePreferences();};
-    el('sizeSlider').oninput=e=>{state.size=Number(e.target.value);el('sizeVal').textContent=state.size;preferences.size=state.size;savePreferences();};
+    document.querySelectorAll('[data-focus-view]').forEach(b=>b.onclick=()=>{el('focusMoreMenu')?.classList.remove('show');setView(b.dataset.focusView);});
+    document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+    el('colorPicker').oninput=e=>{state.color=e.target.value; if(el('focusColorPicker')) el('focusColorPicker').value=state.color; preferences.color=state.color; savePreferences();};
+    el('focusColorPicker').oninput=e=>{state.color=e.target.value; el('colorPicker').value=state.color; preferences.color=state.color; savePreferences();};
+    el('sizeSlider').oninput=e=>{state.size=Number(e.target.value);el('sizeVal').textContent=state.size;if(el('focusSizeSlider'))el('focusSizeSlider').value=state.size;preferences.size=state.size;savePreferences();};
+    el('focusSizeSlider').oninput=e=>{state.size=Number(e.target.value);el('sizeSlider').value=state.size;el('sizeVal').textContent=state.size;preferences.size=state.size;savePreferences();};
     el('modeSelect').onchange=e=>setMode(e.target.value);
-    el('zoomSelect').onchange=e=>{state.zoom=e.target.value;preferences.zoom=state.zoom;savePreferences();applyZoom();};
+    el('focusModeSelect').onchange=e=>setMode(e.target.value);
+    el('zoomSelect').onchange=e=>{state.zoom=e.target.value;el('focusZoomSelect').value=state.zoom;preferences.zoom=state.zoom;savePreferences();applyZoom();};
+    el('focusZoomSelect').onchange=e=>{state.zoom=e.target.value;el('zoomSelect').value=state.zoom;preferences.zoom=state.zoom;savePreferences();applyZoom();};
     el('moreBtn').onclick=e=>{e.stopPropagation();el('moreMenu').classList.toggle('hidden');};
     document.addEventListener('click',e=>{if(!e.target.closest('.menuWrap')) el('moreMenu').classList.add('hidden');});
-    el('focusBtn').onclick=()=>{document.body.classList.add('focus-mode');};
-    el('exitFocusBtn').onclick=()=>{document.body.classList.remove('focus-mode');};
+    el('focusBtn').onclick=()=>{document.body.classList.add('focus-mode');el('focusMoreMenu').classList.remove('show');};
+    el('exitFocusBtn').onclick=()=>{document.body.classList.remove('focus-mode');el('focusMoreMenu').classList.remove('show');};
+    el('focusUndoBtn').onclick=undo;
+    el('focusRedoBtn').onclick=redo;
+    el('focusImageBtn').onclick=()=>el('imageInput').click();
+    el('focusMoreBtn').onclick=e=>{e.stopPropagation();el('focusMoreMenu').classList.toggle('show');};
+    document.addEventListener('click',e=>{ if(!e.target.closest('.focusMoreWrap')) el('focusMoreMenu').classList.remove('show'); });
+    document.querySelectorAll('[data-focus-action]').forEach(b=>b.onclick=()=>{ const a=b.dataset.focusAction; el('focusMoreMenu').classList.remove('show'); if(a==='newPage') newPage(); if(a==='rename') renamePage(); if(a==='clear') clearPage(); if(a==='delete') deletePage(); if(a==='save') cloudSaveProject(false); if(a==='open') cloudOpenProject(); if(a==='download') downloadProjectCopy(); if(a==='export') exportPNG(); });
     window.addEventListener('resize',applyZoom);
     canvas.addEventListener('pointerdown',startDraw); canvas.addEventListener('pointermove',moveDraw); canvas.addEventListener('pointerup',endDraw); canvas.addEventListener('pointercancel',endDraw);
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
