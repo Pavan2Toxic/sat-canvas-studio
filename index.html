@@ -95,7 +95,7 @@
   .paperWrap{width:max-content;margin:0 auto;transform-origin:top center;position:relative;transition:transform .14s ease}
   .board{position:relative;width:1400px;min-height:1700px;border-radius:22px;box-shadow:var(--shadow);overflow:hidden;border:1px solid #d7e0eb;background-color:#fff;background-image:linear-gradient(#e6edf5 1px,transparent 1px),linear-gradient(90deg,#e6edf5 1px,transparent 1px);background-size:36px 36px}
   .board.black{background-color:#101827;background-image:none;border-color:#1e293b;box-shadow:0 18px 50px rgba(0,0,0,.35)}
-    .imageLayer{position:absolute;inset:0;z-index:6}.drawLayer{position:absolute;left:0;top:0;z-index:10;touch-action:none}.selectMode .drawLayer{pointer-events:none}.drawMode .imageLayer{pointer-events:none}.imageObj{position:absolute;user-select:none;touch-action:none;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.10);border:2px solid transparent;background:white;object-fit:contain}.imageObj.selected{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.18),0 8px 24px rgba(15,23,42,.15)}
+    .imageLayer{position:absolute;inset:0;z-index:6}.drawLayer{position:absolute;left:0;top:0;z-index:10;touch-action:none;pointer-events:auto}.selectMode .drawLayer{pointer-events:none}.drawMode .imageLayer{pointer-events:none}.imageObj{position:absolute;user-select:none;touch-action:none;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.10);border:2px solid transparent;background:white;object-fit:contain}.imageObj.selected{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.18),0 8px 24px rgba(15,23,42,.15)}
   .resizeHandle{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;border-radius:6px;background:#2563eb;border:2px solid white;box-shadow:0 2px 8px rgba(15,23,42,.25);display:none;cursor:nwse-resize;z-index:7}.imageObj.selected + .resizeHandle{display:block}
   .textObj{position:absolute;z-index:8;min-width:80px;min-height:30px;padding:4px 6px;border:1px dashed transparent;border-radius:8px;outline:none;font-size:30px;font-weight:700;color:#0f172a;background:rgba(255,255,255,.03)}
   .textObj:focus,.textObj.selected{border-color:#2563eb;background:rgba(37,99,235,.06)}
@@ -597,63 +597,96 @@
     ctx.lineWidth=s.tool==='highlighter'?s.size*2.3:s.size;
     ctx.lineCap='round'; ctx.lineJoin='round';
   }
-  function getPointerSamples(e){ try{ const c=e.getCoalescedEvents?.(); return (c&&c.length)?c:[e]; }catch(_){ return [e]; } }
+  function getPointerSamples(e){
+    try{ const c=e.getCoalescedEvents?.(); return (c&&c.length)?c:[e]; }
+    catch(_){ return [e]; }
+  }
+  function safeSetPointerCapture(e){
+    try{ if(e && Number.isFinite(e.pointerId)) canvas.setPointerCapture(e.pointerId); }catch(_){ }
+  }
+  function safeReleasePointerCapture(e){
+    try{ if(e && Number.isFinite(e.pointerId) && canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId); }catch(_){ }
+  }
   function drawSegment(from,to){ ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); }
   function startDraw(e){
     if(state.tool==='select') return;
     if(state.tool==='text'){ const pnt=boardPoint(e); addText(pnt.x,pnt.y); return; }
+    if(state.drawing) return;
     e.preventDefault();
-    canvas.setPointerCapture?.(e.pointerId);
     state.drawRect=canvas.getBoundingClientRect();
     state.drawing=true;
     state.drawnPointCount=0;
+    state.lastDrawPoint=null;
+    safeSetPointerCapture(e);
     const samples=getPointerSamples(e);
-    const first=boardPoint(samples[0],state.drawRect);
+    const first=boardPoint(samples[0]||e,state.drawRect);
+    ensureHeight(first.y);
     state.currentStroke={id:uid(),tool:state.tool,color:state.color,size:Number(state.size),points:[first]};
     state.lastDrawPoint=first;
+
+    // Draw the initial contact immediately so a click/pen-down is visible.
     beginStrokePaint(state.currentStroke);
     ctx.beginPath();
     ctx.moveTo(first.x,first.y);
     ctx.lineTo(first.x+0.15,first.y+0.15);
     ctx.stroke();
-    // Make the initial contact visible even before the first pointermove sample.
-    if (state.currentStroke.tool !== 'eraser') {
-      ctx.beginPath();
-      ctx.arc(first.x, first.y, Math.max(0.6, state.currentStroke.size/2), 0, Math.PI*2);
-      ctx.fillStyle = state.currentStroke.color;
-      ctx.globalAlpha = state.currentStroke.tool==='highlighter' ? 0.28 : 1;
-      ctx.fill();
-    }
     ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
-    for(let i=1;i<samples.length;i++) drawImmediateSample(samples[i]);
-    if(first.y>page().height-220) ensureHeight(first.y);
+
+    if(state.currentStroke.tool!=='eraser'){
+      ctx.save();
+      ctx.fillStyle=state.currentStroke.color;
+      ctx.globalAlpha=state.currentStroke.tool==='highlighter'?0.28:1;
+      ctx.beginPath();
+      ctx.arc(first.x,first.y,Math.max(0.6,state.currentStroke.size/2),0,Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    for(let i=1;i<samples.length;i++) addDrawPoint(samples[i]);
   }
-  function drawImmediateSample(ev){
+  function addDrawPoint(ev){
+    if(!state.drawing||!state.currentStroke) return;
     const pnt=boardPoint(ev,state.drawRect);
     const prev=state.lastDrawPoint||pnt;
+    if(Math.abs(pnt.x-prev.x)<0.01 && Math.abs(pnt.y-prev.y)<0.01) return;
     state.currentStroke.points.push(pnt);
     beginStrokePaint(state.currentStroke);
-    ctx.beginPath(); drawSegment(prev,pnt); ctx.stroke();
+    ctx.beginPath();
+    drawSegment(prev,pnt);
+    ctx.stroke();
     ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
     state.lastDrawPoint=pnt;
   }
   function moveDraw(e){
     if(!state.drawing||!state.currentStroke) return;
+    lastPointerMoveAt=performance.now();
+    e.preventDefault();
     const samples=getPointerSamples(e);
-    if(!samples.length) return;
-    beginStrokePaint(state.currentStroke);
-    ctx.beginPath();
-    let prev=state.lastDrawPoint;
-    for(const sample of samples){
-      const pnt=boardPoint(sample,state.drawRect);
-      state.currentStroke.points.push(pnt);
-      if(prev) drawSegment(prev,pnt);
-      prev=pnt;
-    }
-    ctx.stroke();
-    ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
-    state.lastDrawPoint=prev;
-    if(prev && prev.y>page().height-220) ensureHeight(prev.y);
+    for(const sample of samples) addDrawPoint(sample);
+    const p=state.lastDrawPoint;
+    if(p && p.y>page().height-220) ensureHeight(p.y);
+  }
+  function fallbackMouseMove(e){
+    if(!state.drawing) return;
+    // When pointer events are healthy they arrive first. Only use mousemove as a
+    // fallback after a short gap, which prevents duplicate segments.
+    if(performance.now()-lastPointerMoveAt<30) return;
+    moveDraw(e);
+  }
+  function endDraw(e){
+    if(!state.drawing||!state.currentStroke) return;
+    e?.preventDefault?.();
+    safeReleasePointerCapture(e);
+    state.drawing=false;
+    state.drawRect=null;
+    state.lastDrawPoint=null;
+    const stroke=state.currentStroke;
+    state.currentStroke=null;
+    const p=page();
+    const index=p.strokes.length;
+    p.strokes.push(stroke);
+    recordStrokeAction('stroke-add',stroke,index);
+    markDirty();
+    refreshCurrentPageMeta();
   }
   function recordStrokeAction(kind,stroke,index){
     state.history.push({kind,pageId:page().id,stroke,index});
@@ -724,7 +757,7 @@
     if(!p.strokes.length){ toast('Nothing to delete'); return; }
     const index=p.strokes.length-1; const stroke=p.strokes.pop(); recordStrokeAction('stroke-remove',stroke,index); redraw(); refreshCurrentPageMeta(); markDirty(); toast('Deleted last stroke');
   }
-  function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
+  function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); canvas.style.pointerEvents=t==='select'?'none':'auto'; if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
   function clearSelection(render=true){state.selectedImageId=null;state.selectedTextId=null;if(render){renderImages();renderTexts();}}
   function setMode(m,persist=true,source='manual'){ state.mode=m; page().mode=m; preferences.mode=m; if(persist)preferences.modeSource=source||'manual'; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff'; if(el('focusColorPicker')) el('focusColorPicker').value='#ffffff'; state.color='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a'; if(el('focusColorPicker')) el('focusColorPicker').value='#0f172a'; state.color='#0f172a';} if(el('modeSelect')) el('modeSelect').value=m; if(el('focusModeSelect')) el('focusModeSelect').value=m; if(persist){savePreferences(); markDirty();} }
   function syncFocusControls(){
@@ -1105,13 +1138,16 @@
     document.addEventListener('pointerdown',()=>{lastUserActivityAt=performance.now();},{passive:true});
     document.addEventListener('keydown',()=>{lastUserActivityAt=performance.now();},{passive:true});
     canvas.addEventListener('pointerdown',startDraw,{passive:false});
-    // Use the normal pointermove stream for reliability. It still gives us coalesced
-    // high-resolution points via getCoalescedEvents(), without depending on
-    // pointerrawupdate support/capture behavior that can drop drawing events on
-    // some Chromium/ChromeOS builds.
     canvas.addEventListener('pointermove',moveDraw,{passive:false});
     canvas.addEventListener('pointerup',endDraw,{passive:false});
     canvas.addEventListener('pointercancel',endDraw,{passive:false});
+    // Mouse fallback for ChromeOS/device combinations where the pointer stream
+    // can intermittently fail. The guards prevent duplicate strokes when both
+    // event families are firing normally.
+    canvas.addEventListener('mousedown',e=>{if(!state.drawing)startDraw(e);},{passive:false});
+    canvas.addEventListener('mousemove',fallbackMouseMove,{passive:false});
+    canvas.addEventListener('mouseup',e=>{if(state.drawing)endDraw(e);},{passive:false});
+    window.addEventListener('blur',()=>{if(state.drawing)endDraw({preventDefault(){}});});
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
     canvasArea.addEventListener('scroll',()=>{ if(scrollGrowFrame) return; scrollGrowFrame=requestAnimationFrame(()=>{ scrollGrowFrame=0; const bottom=canvasArea.scrollTop+canvasArea.clientHeight; if(bottom > getCurrentScale()*page().height - 500){ page().height+=GROW_BY; resizeCanvas(page().height); redraw(); } }); },{passive:true});
     document.addEventListener('paste',async e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items) return; for(const item of items){ if(item.type.startsWith('image/')){ e.preventDefault(); const f=item.getAsFile(); addImage(await fileToDataURL(f),120,120); } } });
