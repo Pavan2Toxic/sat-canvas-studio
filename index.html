@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SAT Canvas Studio Cloud</title>
+<title>SAT Canvas Studio</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230f172a'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Arial,sans-serif' font-size='38' font-weight='700' fill='white'%3ES%3C/text%3E%3C/svg%3E" />
+<meta name="theme-color" content="#0f172a" />
 <style>
   :root{
     --bg:#eef2f7;
@@ -74,12 +76,11 @@
   .paperWrap{width:max-content;margin:0 auto;transform-origin:top center;position:relative;transition:transform .14s ease}
   .board{position:relative;width:1400px;min-height:1700px;border-radius:22px;box-shadow:var(--shadow);overflow:hidden;border:1px solid #d7e0eb;background-color:#fff;background-image:linear-gradient(#e6edf5 1px,transparent 1px),linear-gradient(90deg,#e6edf5 1px,transparent 1px);background-size:36px 36px}
   .board.black{background-color:#101827;background-image:none;border-color:#1e293b;box-shadow:0 18px 50px rgba(0,0,0,.35)}
-  .dropNote{position:absolute;left:24px;top:18px;color:#94a3b8;font-size:13px;font-weight:800;pointer-events:none;user-select:none;z-index:1;opacity:.55}
-  .imageLayer{position:absolute;inset:0;z-index:6}.drawLayer{position:absolute;left:0;top:0;z-index:10;touch-action:none}.selectMode .drawLayer{pointer-events:none}.drawMode .imageLayer{pointer-events:none}.imageObj{position:absolute;user-select:none;touch-action:none;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.10);border:2px solid transparent;background:white;object-fit:contain}.imageObj.selected{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.18),0 8px 24px rgba(15,23,42,.15)}
+    .imageLayer{position:absolute;inset:0;z-index:6}.drawLayer{position:absolute;left:0;top:0;z-index:10;touch-action:none}.selectMode .drawLayer{pointer-events:none}.drawMode .imageLayer{pointer-events:none}.imageObj{position:absolute;user-select:none;touch-action:none;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.10);border:2px solid transparent;background:white;object-fit:contain}.imageObj.selected{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.18),0 8px 24px rgba(15,23,42,.15)}
   .resizeHandle{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;border-radius:6px;background:#2563eb;border:2px solid white;box-shadow:0 2px 8px rgba(15,23,42,.25);display:none;cursor:nwse-resize;z-index:7}.imageObj.selected + .resizeHandle{display:block}
   .textObj{position:absolute;z-index:8;min-width:80px;min-height:30px;padding:4px 6px;border:1px dashed transparent;border-radius:8px;outline:none;font-size:30px;font-weight:700;color:#0f172a;background:rgba(255,255,255,.03)}
   .textObj:focus,.textObj.selected{border-color:#2563eb;background:rgba(37,99,235,.06)}
-  .board.black .textObj{color:#f8fafc}.board.black .dropNote{color:#64748b}
+  .board.black .textObj{color:#f8fafc}
 
   .view{display:none;height:100%;min-height:0}.view.active{display:block}.view.canvasView{display:none}.view.canvasView.active{display:grid;grid-template-rows:1fr}.desmosView,.refView{background:#f8fafc;padding:18px;overflow:auto}.card{background:white;border:1px solid #dbe4ef;border-radius:18px;box-shadow:0 10px 25px rgba(15,23,42,.06);overflow:hidden}.cardHead{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #e2e8f0}.cardHead h2{font-size:15px;margin:0}.cardBody{padding:14px}.desmosFrame{width:100%;height:calc(100vh - 160px);border:0;border-radius:14px;background:white}.refImg{display:block;max-width:980px;width:100%;height:auto;margin:0 auto;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.08)}
   .toast{position:fixed;right:18px;bottom:18px;background:#0f172a;color:white;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:800;box-shadow:0 14px 35px rgba(15,23,42,.28);opacity:0;transform:translateY(10px);transition:.18s ease;z-index:1000}.toast.show{opacity:1;transform:translateY(0)}
@@ -117,6 +118,10 @@
   @media (max-width: 1150px){.brand{min-width:155px}.brandText span{display:none}.status{min-width:118px}.toolbar .control label{display:none}.btn{padding:7px 8px}}
   .modalBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}.modalBackdrop.show{display:flex}.modal{background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 28px 80px rgba(15,23,42,.35);max-width:560px;width:100%;overflow:hidden}.modal h3{margin:0;font-size:17px}.modalTop{padding:16px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}.modalBody{padding:18px;color:#475569;font-size:14px;line-height:1.5}.modalActions{display:flex;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e2e8f0;background:#f8fafc}.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#eef2f7;border:1px solid #dbe4ef;border-radius:6px;padding:1px 5px;font-size:12px;color:#334155}
   @media (max-width: 900px){:root{--sideW:0px}.sidebar{display:none}.brand{min-width:160px}.topbar{gap:7px}.btn{padding:8px 9px}.seg button{padding:7px 10px}.toolbar{padding:9px}.control label{display:none}}
+
+  .drawLayer{will-change:contents}
+  .canvasArea, .board, .drawLayer{contain:layout paint style}
+  .focusDock{will-change:left,top}
 </style>
 <script src="config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -161,6 +166,7 @@
     <div class="focusGroup" aria-label="Actions">
       <button id="focusUndoBtn" class="focusActionBtn" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M5 9h9a6 6 0 0 1 6 6v1"/></svg></button>
       <button id="focusRedoBtn" class="focusActionBtn" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 14 5-5-5-5"/><path d="M19 9h-9a6 6 0 0 0-6 6v1"/></svg></button>
+      <button id="focusDeleteLastBtn" class="focusActionBtn" title="Delete last stroke or selected item" aria-label="Delete last"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M7 7l1 13h8l1-13"/><path d="M9 7V4h6v3"/></svg></button>
       <button id="focusImageBtn" class="focusActionBtn" title="Add image" aria-label="Add image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></button>
     </div>
     <div class="focusDivider"></div>
@@ -174,6 +180,7 @@
           <button data-focus-action="newPage">New page</button>
           <button data-focus-action="rename">Rename page</button>
           <button data-focus-action="clear">Clear page</button>
+          <button data-focus-action="deleteLast">Delete last</button>
           <button data-focus-action="delete">Delete page</button>
           <button data-focus-action="save">Save to Drive</button>
           <button data-focus-action="open">Open from Drive</button>
@@ -204,14 +211,14 @@
         <div class="control"><label>Zoom</label><select id="zoomSelect" class="select"><option value="fit">Fit</option><option value="0.75">75%</option><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select></div>
         <div class="control"><label>Mode</label><select id="modeSelect" class="select"><option value="paper">Paper</option><option value="board">Blackboard</option></select></div>
         <div class="divider"></div>
-        <button id="undoBtn" class="btn">Undo</button><button id="redoBtn" class="btn">Redo</button><button id="imageBtn" class="btn">Add Image</button><button id="renameBtn" class="btn">Rename</button><button id="clearBtn" class="btn danger">Clear</button><button id="deletePageBtn" class="btn danger">Delete Page</button>
+        <button id="undoBtn" class="btn">Undo</button><button id="redoBtn" class="btn">Redo</button><button id="deleteLastBtn" class="btn" title="Delete the last stroke or selected item" aria-label="Delete last"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M7 7l1 13h8l1-13"/><path d="M9 7V4h6v3"/></svg></button><button id="imageBtn" class="btn">Add Image</button><button id="renameBtn" class="btn">Rename</button><button id="clearBtn" class="btn danger">Clear</button><button id="deletePageBtn" class="btn danger">Delete Page</button>
       </div>
 
       <div id="canvasView" class="view canvasView active">
         <div id="canvasArea" class="canvasArea">
           <div id="paperWrap" class="paperWrap">
             <div id="board" class="board drawMode">
-              <div class="dropNote">Paste an SAT question screenshot here, then write underneath or over it.</div>
+              
               <div id="imageLayer" class="imageLayer"></div>
               <div id="textLayer" class="imageLayer"></div>
               <canvas id="drawCanvas" class="drawLayer"></canvas>
@@ -263,7 +270,7 @@
   };
   const state = {
     pages: [], current: 0, tool: 'pen', color:'#0f172a', size:8, mode:'paper', zoom:'fit', activeView:'canvas',
-    drawing:false, currentStroke:null, history:[], redo:[], selectedImageId:null, selectedTextId:null, dirty:false
+    drawing:false, currentStroke:null, history:[], redo:[], selectedImageId:null, selectedTextId:null, dirty:false, drawRect:null, drawFrameId:0, drawnPointCount:0
   };
   const el = id => document.getElementById(id);
   const canvas = el('drawCanvas'); const ctx = canvas.getContext('2d');
@@ -330,14 +337,84 @@
   function renderPages(){ const list=el('pageList'); list.innerHTML=''; state.pages.forEach((p,i)=>{ const d=document.createElement('div'); d.className='pageItem'+(i===state.current?' active':''); d.innerHTML=`<div class="pageDot">${i+1}</div><div class="pageName"><strong></strong><span>${p.images.length} images · ${p.strokes.length} strokes</span></div>`; d.querySelector('strong').textContent=p.name; d.onclick=()=>{state.current=i; clearSelection(); state.mode=page().mode||preferences.mode||'paper'; preferences.mode=state.mode; savePreferences(); renderAll(); saveLocal();}; list.appendChild(d); }); }
   function renderImages(){ imageLayer.innerHTML=''; page().images.forEach(img=>{ const wrap=document.createElement('div'); wrap.style.position='absolute'; wrap.style.left=img.x+'px'; wrap.style.top=img.y+'px'; wrap.style.width=img.w+'px'; wrap.style.height=img.h+'px'; wrap.style.zIndex=String(img.z||1); const im=document.createElement('img'); im.className='imageObj'+(state.selectedImageId===img.id?' selected':''); im.src=img.src; im.draggable=false; im.style.width='100%'; im.style.height='100%'; const handle=document.createElement('div'); handle.className='resizeHandle'; wrap.appendChild(im); wrap.appendChild(handle); imageLayer.appendChild(wrap); im.addEventListener('pointerdown',e=>startMoveImage(e,img,wrap)); handle.addEventListener('pointerdown',e=>startResizeImage(e,img,wrap)); }); }
   function renderTexts(){ textLayer.innerHTML=''; page().texts.forEach(t=>{ const d=document.createElement('div'); d.className='textObj'; d.contentEditable='true'; d.textContent=t.text||''; d.style.left=t.x+'px'; d.style.top=t.y+'px'; d.style.fontSize=(t.size||30)+'px'; d.style.color=t.color||state.color; d.dataset.id=t.id; d.onfocus=()=>{state.selectedTextId=t.id}; d.oninput=()=>{t.text=d.textContent; markDirty();}; d.addEventListener('pointerdown',e=>{ if(state.tool==='select'){startMoveText(e,t,d)} }); textLayer.appendChild(d); }); }
-  function boardPoint(e){ const r=canvas.getBoundingClientRect(); return {x:(e.clientX-r.left)*(canvas.width/r.width), y:(e.clientY-r.top)*(canvas.height/r.height)}; }
-  function startDraw(e){ if(state.tool==='select') return; if(state.tool==='text'){ const pnt=boardPoint(e); addText(pnt.x,pnt.y); return; } canvas.setPointerCapture(e.pointerId); state.drawing=true; const pnt=boardPoint(e); ensureHeight(pnt.y); state.currentStroke={tool:state.tool,color:state.color,size:Number(state.size),points:[pnt]}; drawStroke(state.currentStroke); }
-  function moveDraw(e){ if(!state.drawing||!state.currentStroke) return; const pnt=boardPoint(e); ensureHeight(pnt.y); state.currentStroke.points.push(pnt); redraw(); drawStroke(state.currentStroke); }
-  function endDraw(e){ if(!state.drawing||!state.currentStroke) return; state.drawing=false; pushHistory(); page().strokes.push(state.currentStroke); state.currentStroke=null; redraw(); markDirty(); renderPages(); }
+  function boardPoint(e, rect=state.drawRect || canvas.getBoundingClientRect()){
+    return {x:(e.clientX-rect.left)*(canvas.width/rect.width), y:(e.clientY-rect.top)*(canvas.height/rect.height)};
+  }
+  function styleActiveStroke(s){
+    ctx.save();
+    ctx.globalCompositeOperation = s.tool==='eraser' ? 'destination-out' : 'source-over';
+    ctx.globalAlpha = s.tool==='highlighter' ? 0.28 : 1;
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = s.tool==='highlighter' ? s.size*2.3 : s.size;
+    ctx.lineCap='round'; ctx.lineJoin='round';
+  }
+  function flushCurrentStroke(){
+    state.drawFrameId=0;
+    const s=state.currentStroke;
+    if(!state.drawing || !s || !s.points.length) return;
+    const pts=s.points;
+    const start=Math.max(1,state.drawnPointCount);
+    if(start>=pts.length) return;
+    styleActiveStroke(s);
+    ctx.beginPath();
+    for(let i=start;i<pts.length;i++){ const a=pts[i-1], b=pts[i]; ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); }
+    ctx.stroke();
+    ctx.restore();
+    state.drawnPointCount=pts.length;
+  }
+  function scheduleStrokeFrame(){ if(state.drawFrameId) return; state.drawFrameId=requestAnimationFrame(flushCurrentStroke); }
+  function startDraw(e){
+    if(state.tool==='select') return;
+    if(state.tool==='text'){ const pnt=boardPoint(e); addText(pnt.x,pnt.y); return; }
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    state.drawRect=canvas.getBoundingClientRect();
+    state.drawing=true;
+    state.drawnPointCount=1;
+    const pnt=boardPoint(e,state.drawRect);
+    ensureHeight(pnt.y);
+    state.currentStroke={tool:state.tool,color:state.color,size:Number(state.size),points:[pnt]};
+    drawStroke(state.currentStroke);
+  }
+  function moveDraw(e){
+    if(!state.drawing||!state.currentStroke) return;
+    const pnt=boardPoint(e,state.drawRect);
+    ensureHeight(pnt.y);
+    state.currentStroke.points.push(pnt);
+    scheduleStrokeFrame();
+  }
+  function endDraw(e){
+    if(!state.drawing||!state.currentStroke) return;
+    if(state.drawFrameId){ cancelAnimationFrame(state.drawFrameId); state.drawFrameId=0; }
+    flushCurrentStroke();
+    state.drawing=false;
+    state.drawRect=null;
+    pushHistory();
+    page().strokes.push(state.currentStroke);
+    state.currentStroke=null;
+    redraw();
+    markDirty();
+    renderPages();
+  }
   function pushHistory(){ state.history.push(JSON.stringify(page())); if(state.history.length>45) state.history.shift(); state.redo=[]; }
   function restorePageFrom(raw){ const id=page().id; const name=page().name; const restored=JSON.parse(raw); if(!restored.id) restored.id=id; if(!restored.name) restored.name=name; state.pages[state.current]=restored; renderAll(); markDirty(); }
   function undo(){ if(state.history.length===0) return; state.redo.push(JSON.stringify(page())); restorePageFrom(state.history.pop()); toast('Undone'); }
   function redo(){ if(state.redo.length===0) return; state.history.push(JSON.stringify(page())); restorePageFrom(state.redo.pop()); toast('Redone'); }
+  function deleteLast(){
+    const p=page();
+    if(state.selectedImageId){
+      const idx=p.images.findIndex(i=>i.id===state.selectedImageId);
+      if(idx<0){ toast('Nothing to delete'); return; }
+      pushHistory(); p.images.splice(idx,1); state.selectedImageId=null; renderImages(); renderPages(); markDirty(); toast('Deleted selected image'); return;
+    }
+    if(state.selectedTextId){
+      const idx=p.texts.findIndex(t=>t.id===state.selectedTextId);
+      if(idx<0){ toast('Nothing to delete'); return; }
+      pushHistory(); p.texts.splice(idx,1); state.selectedTextId=null; renderTexts(); renderPages(); markDirty(); toast('Deleted selected text'); return;
+    }
+    if(!p.strokes.length){ toast('Nothing to delete'); return; }
+    pushHistory(); p.strokes.pop(); redraw(); renderPages(); markDirty(); toast('Deleted last stroke');
+  }
   function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
   function clearSelection(render=true){state.selectedImageId=null;state.selectedTextId=null;if(render){renderImages();renderTexts();}}
   function setMode(m,persist=true){ state.mode=m; page().mode=m; preferences.mode=m; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff'; if(el('focusColorPicker')) el('focusColorPicker').value='#ffffff'; state.color='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a'; if(el('focusColorPicker')) el('focusColorPicker').value='#0f172a'; state.color='#0f172a';} if(el('modeSelect')) el('modeSelect').value=m; if(el('focusModeSelect')) el('focusModeSelect').value=m; if(persist){savePreferences(); markDirty();} }
@@ -729,10 +806,11 @@
     el('exitFocusBtn').onclick=()=>{document.body.classList.remove('focus-mode');el('focusMoreMenu').classList.remove('show');};
     el('focusUndoBtn').onclick=undo;
     el('focusRedoBtn').onclick=redo;
+    el('focusDeleteLastBtn').onclick=deleteLast;
     el('focusImageBtn').onclick=()=>el('imageInput').click();
     el('focusMoreBtn').onclick=e=>{e.stopPropagation();el('focusMoreMenu').classList.toggle('show');};
     document.addEventListener('click',e=>{ if(!e.target.closest('.focusMoreWrap')) el('focusMoreMenu').classList.remove('show'); });
-    document.querySelectorAll('[data-focus-action]').forEach(b=>b.onclick=()=>{ const a=b.dataset.focusAction; el('focusMoreMenu').classList.remove('show'); if(a==='newPage') newPage(); if(a==='rename') renamePage(); if(a==='clear') clearPage(); if(a==='delete') deletePage(); if(a==='save') cloudSaveProject(false); if(a==='open') cloudOpenProject(); if(a==='download') downloadProjectCopy(); if(a==='export') exportPNG(); });
+    document.querySelectorAll('[data-focus-action]').forEach(b=>b.onclick=()=>{ const a=b.dataset.focusAction; el('focusMoreMenu').classList.remove('show'); if(a==='newPage') newPage(); if(a==='rename') renamePage(); if(a==='clear') clearPage(); if(a==='delete') deletePage(); if(a==='deleteLast') deleteLast(); if(a==='save') cloudSaveProject(false); if(a==='open') cloudOpenProject(); if(a==='download') downloadProjectCopy(); if(a==='export') exportPNG(); });
     window.addEventListener('resize',applyZoom);
     canvas.addEventListener('pointerdown',startDraw); canvas.addEventListener('pointermove',moveDraw); canvas.addEventListener('pointerup',endDraw); canvas.addEventListener('pointercancel',endDraw);
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
@@ -742,9 +820,9 @@
     el('imageBtn').onclick=()=>el('imageInput').click(); el('imageInput').onchange=e=>addImageFiles(e.target.files); el('openBtn').onclick=openProjectPicker; el('fileInput').onchange=e=>{ if(e.target.files[0]) openProjectFile(e.target.files[0]);};
     el('connectDriveBtn').onclick=connectDrive; el('cloudSaveBtn').onclick=()=>cloudSaveProject(false); el('cloudOpenBtn').onclick=cloudOpenProject;
     el('saveBtn').onclick=()=>{el('moreMenu').classList.add('hidden');saveProject();}; el('saveAsBtn').onclick=()=>{el('moreMenu').classList.add('hidden');saveProjectAs();}; el('downloadBtn').onclick=()=>{el('moreMenu').classList.add('hidden');downloadProjectCopy();}; el('exportBtn').onclick=()=>{el('moreMenu').classList.add('hidden');exportPNG();}; el('helpBtn').onclick=()=>{el('moreMenu').classList.add('hidden');el('modal').classList.add('show');}; el('openBtn').onclick=()=>{el('moreMenu').classList.add('hidden');openProjectPicker();};
-    el('undoBtn').onclick=undo; el('redoBtn').onclick=redo; el('renameBtn').onclick=renamePage; el('newPageBtn').onclick=newPage; el('clearBtn').onclick=clearPage; el('deletePageBtn').onclick=deletePage; el('openDesmosBtn').onclick=()=>window.open('https://www.desmos.com/testing/collegeboard/graphing','_blank','noopener');
+    el('undoBtn').onclick=undo; el('redoBtn').onclick=redo; el('deleteLastBtn').onclick=deleteLast; el('renameBtn').onclick=renamePage; el('newPageBtn').onclick=newPage; el('clearBtn').onclick=clearPage; el('deletePageBtn').onclick=deletePage; el('openDesmosBtn').onclick=()=>window.open('https://www.desmos.com/testing/collegeboard/graphing','_blank','noopener');
     el('copyRefBtn').onclick=()=>addImage(REF_SRC,90,90,900); el('helpBtn').onclick=()=>el('modal').classList.add('show'); el('closeModalBtn').onclick=el('modalOkBtn').onclick=()=>el('modal').classList.remove('show');
-    document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault(); if(driveState.connected || driveState.fileId) cloudSaveProject(false); else saveProject();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();} if(e.key==='Delete'&&state.tool==='select'&&state.selectedImageId){ pushHistory(); page().images=page().images.filter(i=>i.id!==state.selectedImageId); state.selectedImageId=null; renderImages(); markDirty(); }});
+    document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault(); if(driveState.connected || driveState.fileId) cloudSaveProject(false); else saveProject();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();} if(e.key==='Delete'&&state.tool==='select'&&(state.selectedImageId||state.selectedTextId)){ e.preventDefault(); deleteLast(); }});
   }
   setup();
 })();
