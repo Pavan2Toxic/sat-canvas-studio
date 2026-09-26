@@ -17,25 +17,25 @@
     --danger:#dc2626;
     --shadow:0 18px 45px rgba(15,23,42,.12);
     --radius:18px;
-    --topH:58px;
-    --toolbarH:64px;
-    --sideW:238px;
+    --topH:50px;
+    --toolbarH:52px;
+    --sideW:210px;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
   button,input,select{font:inherit}
   .app{height:100%;display:grid;grid-template-rows:var(--topH) 1fr;background:linear-gradient(180deg,#f7f9fc,#e9eef6)}
-  .topbar{height:var(--topH);display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.86);backdrop-filter:blur(12px);z-index:50}
-  .brand{display:flex;align-items:center;gap:10px;min-width:220px}
-  .logo{width:34px;height:34px;border-radius:11px;background:#0f172a;color:#fff;display:grid;place-items:center;font-weight:800;letter-spacing:.02em;box-shadow:0 8px 20px rgba(15,23,42,.18)}
-  .brandText{line-height:1.05}.brandText strong{display:block;font-size:14px}.brandText span{font-size:11px;color:var(--muted)}
-  .seg{display:flex;align-items:center;background:#eef2f7;border:1px solid #dbe4ef;border-radius:999px;padding:4px;gap:3px}
-  .seg button{border:0;background:transparent;border-radius:999px;padding:8px 14px;font-weight:750;font-size:12px;color:#334155;cursor:pointer}
+  .topbar{height:var(--topH);display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.86);backdrop-filter:blur(12px);z-index:50}
+  .brand{display:flex;align-items:center;gap:10px;min-width:185px}
+  .logo{width:30px;height:28px;border-radius:11px;background:#0f172a;color:#fff;display:grid;place-items:center;font-weight:800;letter-spacing:.02em;box-shadow:0 8px 20px rgba(15,23,42,.18)}
+  .brandText{line-height:1.05}.brandText strong{display:block;font-size:13px}.brandText span{font-size:10px;color:var(--muted)}
+  .seg{display:flex;align-items:center;background:#eef2f7;border:1px solid #dbe4ef;border-radius:999px;padding:3px;gap:2px}
+  .seg button{border:0;background:transparent;border-radius:999px;padding:6px 10px;font-weight:750;font-size:11px;color:#334155;cursor:pointer}
   .seg button.active{background:#0f172a;color:white;box-shadow:0 5px 14px rgba(15,23,42,.17)}
   .topspacer{flex:1}
-  .btn{border:1px solid #dbe4ef;background:white;color:#0f172a;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 1px 0 rgba(15,23,42,.03)}
+  .btn{border:1px solid #dbe4ef;background:white;color:#0f172a;border-radius:12px;padding:7px 9px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 0 rgba(15,23,42,.03)}
   .btn:hover{background:#f8fafc}.btn.primary{background:#0f172a;border-color:#0f172a;color:white}.btn.blue{background:#2563eb;border-color:#2563eb;color:white}.btn.danger{color:#dc2626}.btn.ghost{background:transparent}
-  .status{font-size:11px;color:var(--muted);min-width:175px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:7px;white-space:nowrap;font-weight:700}
+  .status{font-size:11px;color:var(--muted);min-width:142px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:7px;white-space:nowrap;font-weight:700}
   .status::before{content:"";width:8px;height:8px;border-radius:999px;background:#94a3b8;flex:0 0 auto;box-shadow:0 0 0 3px rgba(148,163,184,.14)}
   .status[data-state="saved"]{color:#15803d}
   .status[data-state="saved"]::before{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14)}
@@ -48,10 +48,10 @@
   @keyframes savePulse{0%,100%{opacity:.45;transform:scale(.9)}50%{opacity:1;transform:scale(1.08)}}
 
   .main{display:grid;grid-template-columns:var(--sideW) 1fr;height:calc(100vh - var(--topH));min-height:0}
-  .sidebar{border-right:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.78);backdrop-filter:blur(12px);padding:14px;overflow:auto}
+  .sidebar{border-right:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.78);backdrop-filter:blur(12px);padding:10px;overflow:auto}
   .sideTitle{font-size:11px;letter-spacing:.08em;color:#64748b;font-weight:900;text-transform:uppercase;margin:6px 0 10px}
   .pageList{display:flex;flex-direction:column;gap:8px}
-  .pageItem{border:1px solid #e2e8f0;background:white;border-radius:14px;padding:10px 10px;display:flex;align-items:center;gap:9px;cursor:pointer;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+  .pageItem{border:1px solid #e2e8f0;background:white;border-radius:14px;padding:10px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;box-shadow:0 2px 8px rgba(15,23,42,.04)}
   .pageItem.active{border-color:#0f172a;box-shadow:0 0 0 2px rgba(15,23,42,.08)}
   .pageDot{width:30px;height:30px;border-radius:10px;background:#f1f5f9;display:grid;place-items:center;font-size:12px;font-weight:900;color:#334155}
   .pageName{flex:1;min-width:0}.pageName strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pageName span{font-size:10px;color:var(--muted)}
@@ -59,13 +59,13 @@
   .sideHint b{color:#0f172a}
 
   .workspace{height:100%;min-width:0;display:grid;grid-template-rows:var(--toolbarH) 1fr;background:#eef2f7;position:relative}
-  .toolbar{height:var(--toolbarH);display:flex;align-items:center;gap:9px;padding:10px 16px;border-bottom:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.84);backdrop-filter:blur(10px);overflow-x:auto;z-index:30}
-  .toolBtn{min-width:42px;height:42px;border:1px solid #dbe4ef;background:white;border-radius:13px;display:grid;place-items:center;cursor:pointer;font-weight:900;color:#0f172a;box-shadow:0 1px 0 rgba(15,23,42,.03)}
+  .toolbar{height:var(--toolbarH);display:flex;align-items:center;gap:9px;padding:7px 10px;border-bottom:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.84);backdrop-filter:blur(10px);overflow-x:auto;z-index:30}
+  .toolBtn{min-width:36px;height:36px;border:1px solid #dbe4ef;background:white;border-radius:11px;display:grid;place-items:center;cursor:pointer;font-weight:900;color:#0f172a;box-shadow:0 1px 0 rgba(15,23,42,.03)}
   .toolBtn svg{width:19px;height:19px}.toolBtn.active{background:#0f172a;color:white;border-color:#0f172a}.toolBtn.active svg{stroke:white}
   .divider{width:1px;height:32px;background:#dbe4ef;margin:0 3px;flex:none}
-  .control{display:flex;align-items:center;gap:8px;border:1px solid #dbe4ef;background:white;border-radius:13px;padding:8px 10px;height:42px;flex:none}
+  .control{display:flex;align-items:center;gap:8px;border:1px solid #dbe4ef;background:white;border-radius:13px;padding:6px 8px;height:36px;flex:none}
   .control label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:#64748b}
-  input[type="range"]{width:104px;accent-color:#0f172a}
+  input[type="range"]{width:88px;accent-color:#0f172a}
   input[type="color"]{width:31px;height:31px;border:0;background:transparent;padding:0;border-radius:10px;overflow:hidden;cursor:pointer}
   .select{height:30px;border:0;background:#f8fafc;border-radius:9px;padding:0 8px;font-weight:800;font-size:12px;color:#334155}
 
@@ -84,6 +84,20 @@
   .view{display:none;height:100%;min-height:0}.view.active{display:block}.view.canvasView{display:none}.view.canvasView.active{display:grid;grid-template-rows:1fr}.desmosView,.refView{background:#f8fafc;padding:18px;overflow:auto}.card{background:white;border:1px solid #dbe4ef;border-radius:18px;box-shadow:0 10px 25px rgba(15,23,42,.06);overflow:hidden}.cardHead{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #e2e8f0}.cardHead h2{font-size:15px;margin:0}.cardBody{padding:14px}.desmosFrame{width:100%;height:calc(100vh - 160px);border:0;border-radius:14px;background:white}.refImg{display:block;max-width:980px;width:100%;height:auto;margin:0 auto;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(15,23,42,.08)}
   .toast{position:fixed;right:18px;bottom:18px;background:#0f172a;color:white;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:800;box-shadow:0 14px 35px rgba(15,23,42,.28);opacity:0;transform:translateY(10px);transition:.18s ease;z-index:1000}.toast.show{opacity:1;transform:translateY(0)}
   .hidden{display:none!important}
+  .menuWrap{position:relative;display:inline-flex;flex:none}
+  .menu{position:absolute;right:0;top:calc(100% + 8px);min-width:190px;background:white;border:1px solid #dbe4ef;border-radius:14px;box-shadow:0 18px 45px rgba(15,23,42,.18);padding:6px;z-index:200}
+  .menu button{width:100%;text-align:left;border:0;background:transparent;border-radius:10px;padding:9px 10px;color:#0f172a;font-size:12px;font-weight:750;cursor:pointer}
+  .menu button:hover{background:#f1f5f9}
+  body.focus-mode .topbar,body.focus-mode .sidebar,body.focus-mode .toolbar{display:none}
+  body.focus-mode .main{grid-template-columns:1fr}
+  body.focus-mode .workspace{grid-template-rows:1fr}
+  body.focus-mode .canvasArea{padding:18px 18px 70px}
+  .focusDock{position:fixed;left:16px;top:16px;display:none;align-items:center;gap:4px;padding:5px;background:rgba(15,23,42,.92);border:1px solid rgba(255,255,255,.10);border-radius:14px;box-shadow:0 16px 35px rgba(0,0,0,.28);z-index:120}
+  body.focus-mode .focusDock{display:flex}
+  .focusDock button{border:0;background:transparent;color:#e2e8f0;border-radius:9px;padding:7px 9px;font-size:11px;font-weight:800;cursor:pointer}
+  .focusDock button.active{background:#fff;color:#0f172a}
+  .focusDock .exitFocus{margin-left:2px;background:#334155}
+  @media (max-width: 1150px){.brand{min-width:155px}.brandText span{display:none}.status{min-width:118px}.toolbar .control label{display:none}.btn{padding:7px 8px}}
   .modalBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}.modalBackdrop.show{display:flex}.modal{background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 28px 80px rgba(15,23,42,.35);max-width:560px;width:100%;overflow:hidden}.modal h3{margin:0;font-size:17px}.modalTop{padding:16px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}.modalBody{padding:18px;color:#475569;font-size:14px;line-height:1.5}.modalActions{display:flex;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e2e8f0;background:#f8fafc}.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#eef2f7;border:1px solid #dbe4ef;border-radius:6px;padding:1px 5px;font-size:12px;color:#334155}
   @media (max-width: 900px){:root{--sideW:0px}.sidebar{display:none}.brand{min-width:160px}.topbar{gap:7px}.btn{padding:8px 9px}.seg button{padding:7px 10px}.toolbar{padding:9px}.control label{display:none}}
 </style>
@@ -97,22 +111,34 @@
     <nav class="seg" aria-label="Views"><button id="tabCanvas" class="active" data-view="canvas">Canvas</button><button id="tabDesmos" data-view="desmos">Desmos</button><button id="tabRef" data-view="reference">Reference</button></nav>
     <div class="topspacer"></div>
     <button id="connectDriveBtn" class="btn primary" title="Authorize Google Drive saving">Sign in with Google</button>
-    <button id="cloudSaveBtn" class="btn blue" title="Save this project to Google Drive">Save to Drive</button>
-    <button id="cloudOpenBtn" class="btn" title="Open a SAT Canvas project saved by this app in Google Drive">Open Drive</button>
-    <button id="saveBtn" class="btn" title="Local fallback: save to a file using the browser file picker">Save Local</button>
-    <button id="saveAsBtn" class="btn" title="Local fallback: choose a .satcanvas file in Downloads or Google Drive">Save Local As</button>
-    <button id="openBtn" class="btn">Open Local</button>
-    <button id="downloadBtn" class="btn">Download Copy</button>
-    <button id="exportBtn" class="btn">Export PNG</button>
-    <button id="helpBtn" class="btn ghost">?</button>
+    <button id="cloudSaveBtn" class="btn blue" title="Save this project to Google Drive">Save</button>
+    <button id="cloudOpenBtn" class="btn" title="Open a SAT Canvas project saved by this app in Google Drive">Open</button>
+    <div class="menuWrap">
+      <button id="moreBtn" class="btn" title="More save and export options">More</button>
+      <div id="moreMenu" class="menu hidden">
+        <button id="saveBtn">Save Local</button>
+        <button id="saveAsBtn">Save Local As</button>
+        <button id="openBtn">Open Local</button>
+        <button id="downloadBtn">Download Copy</button>
+        <button id="exportBtn">Export PNG</button>
+        <button id="helpBtn">Help</button>
+      </div>
+    </div>
+    <button id="focusBtn" class="btn" title="Hide the app chrome and focus on your work">Focus</button>
     <div id="status" class="status">Ready</div>
   </header>
+  <div id="focusDock" class="focusDock" aria-label="Focus controls">
+    <button data-focus-view="canvas" class="active">Canvas</button>
+    <button data-focus-view="desmos">Desmos</button>
+    <button data-focus-view="reference">Reference</button>
+    <button id="exitFocusBtn" class="exitFocus">Exit Focus</button>
+  </div>
   <main class="main">
     <aside class="sidebar">
       <button id="newPageBtn" class="btn blue" style="width:100%;margin-bottom:12px">New Page</button>
       <div class="sideTitle">Pages</div>
       <div id="pageList" class="pageList"></div>
-      <div class="sideHint"><b>Cloud setup:</b> publish this folder with GitHub Pages, then click <b>Sign in with Google</b> to connect Drive. The app creates a <b>.satcanvas</b> project in Drive and autosaves while you work. Use <b>Download Copy</b> as backup.</div>
+      <div class="sideHint"><b>Drive:</b> Google Connected means cloud autosave is on. Use <b>Download Copy</b> for a manual backup.</div>
     </aside>
     <section class="workspace">
       <div id="toolbar" class="toolbar">
@@ -173,6 +199,7 @@
   const DRIVE_FILE_NAME_KEY = 'sat_canvas_cloud_drive_file_name_v1';
   const DRIVE_AUTHORIZED_KEY = 'sat_canvas_cloud_drive_authorized_v1';
   const DRIVE_ACCOUNT_EMAIL_KEY = 'sat_canvas_cloud_drive_account_email_v1';
+  const PREFS_KEY = 'sat_canvas_studio_prefs_v1';
   const DRIVE_AUTOSAVE_MS = 3500;
   const driveState = {
     tokenClient: null,
@@ -183,7 +210,7 @@
     fileName: localStorage.getItem('sat_canvas_cloud_drive_file_name_v1') || 'SAT Canvas Studio Project.satcanvas'
   };
   const state = {
-    pages: [], current: 0, tool: 'pen', color:'#0f172a', size:8, mode:'paper', zoom:'fit',
+    pages: [], current: 0, tool: 'pen', color:'#0f172a', size:8, mode:'paper', zoom:'fit', activeView:'canvas',
     drawing:false, currentStroke:null, history:[], redo:[], selectedImageId:null, selectedTextId:null, dirty:false
   };
   const el = id => document.getElementById(id);
@@ -191,11 +218,24 @@
   const board = el('board'); const paperWrap = el('paperWrap'); const canvasArea = el('canvasArea');
   const imageLayer = el('imageLayer'); const textLayer = el('textLayer');
   const status = el('status');
-  function defaultPage(name='Page 1'){return {id:uid(), name, height:MIN_H, strokes:[], images:[], texts:[], createdAt:Date.now()};}
+  let preferences = {mode:'paper',zoom:'fit',tool:'pen',color:'#0f172a',size:8,activeView:'canvas'};
+  function loadPreferences(){ try{ const raw=localStorage.getItem(PREFS_KEY); if(raw){ const p=JSON.parse(raw); preferences=Object.assign(preferences,p||{}); } }catch(e){} }
+  function savePreferences(){ try{ localStorage.setItem(PREFS_KEY, JSON.stringify(preferences)); }catch(e){} }
+  function syncStateFromPreferences(){ state.tool=preferences.tool||state.tool; state.color=preferences.color||state.color; state.size=Number(preferences.size||state.size); state.zoom=preferences.zoom||state.zoom; state.activeView=preferences.activeView||state.activeView; }
+  function defaultPage(name='Page 1'){return {id:uid(), name, height:MIN_H, mode:state.mode, strokes:[], images:[], texts:[], createdAt:Date.now()};}
+  function setView(view,persist=true){
+    state.activeView=view;
+    document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+    document.querySelectorAll('[data-focus-view]').forEach(x=>x.classList.toggle('active',x.dataset.focusView===view));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const target=el(view+'View'); if(target) target.classList.add('active');
+    if(persist){ preferences.activeView=view; savePreferences(); }
+    if(view==='canvas') setTimeout(applyZoom,40);
+  }
   function uid(){return 'id_' + Math.random().toString(36).slice(2) + Date.now().toString(36)}
   function page(){return state.pages[state.current]}
   function toast(msg){const t=el('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._to);t._to=setTimeout(()=>t.classList.remove('show'),1800)}
-  function markDirty(){state.dirty=true;setStatus(driveState.fileId?'Changes pending · Drive autosave queued':(projectHandle?'Changes pending · local file autosave queued':'Changes pending · local autosave')); clearTimeout(markDirty._t); markDirty._t=setTimeout(saveLocal,220); scheduleLinkedAutosave(); scheduleCloudAutosave();}
+  function markDirty(){state.dirty=true; savePreferences();setStatus(driveState.fileId?'Changes pending · Drive autosave queued':(projectHandle?'Changes pending · local file autosave queued':'Changes pending · local autosave')); clearTimeout(markDirty._t); markDirty._t=setTimeout(saveLocal,220); scheduleLinkedAutosave(); scheduleCloudAutosave();}
   function setStatus(s){
     status.textContent=s;
     const lower=String(s).toLowerCase();
@@ -207,15 +247,33 @@
     if(lower.includes('saved to google drive')) stateName='saved';
     status.dataset.state=stateName;
   }
-  function loadLocal(){try{const raw=localStorage.getItem(LS_KEY); if(raw){const data=JSON.parse(raw); if(data.pages&&data.pages.length){state.pages=data.pages; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||'paper'; return true;}}}catch(e){} return false;}
-  function saveLocal(){try{localStorage.setItem(LS_KEY, JSON.stringify({pages:state.pages,current:state.current,mode:state.mode,savedAt:Date.now()}));state.dirty=false;}catch(e){console.warn(e);setStatus('Local autosave failed');}}
-  function setup(){ if(!loadLocal()) state.pages=[defaultPage()]; resizeCanvas(page().height); renderAll(); bind(); applyZoom(); setMode(state.mode); setTool('pen'); initStoredHandle(); updateDriveUi(); setTimeout(()=>el('modal').classList.add('show'),350); setTimeout(()=>autoReconnectDrive(),250); }
+  function loadLocal(){try{const raw=localStorage.getItem(LS_KEY); if(raw){const data=JSON.parse(raw); if(data.pages&&data.pages.length){state.pages=data.pages; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||state.pages[state.current].mode||preferences.mode||'paper'; state.activeView=data.activeView||preferences.activeView||'canvas'; return true;}}}catch(e){} return false;}
+  function saveLocal(){try{localStorage.setItem(LS_KEY, JSON.stringify({pages:state.pages,current:state.current,mode:state.mode,activeView:state.activeView,savedAt:Date.now()}));state.dirty=false;}catch(e){console.warn(e);setStatus('Local autosave failed');}}
+  function setup(){
+    loadPreferences();
+    syncStateFromPreferences();
+    if(!loadLocal()) state.pages=[defaultPage()];
+    resizeCanvas(page().height);
+    renderAll();
+    bind();
+    setMode(page().mode||state.mode,false);
+    setTool(state.tool,false);
+    setView(state.activeView,false);
+    el('colorPicker').value=state.color;
+    el('sizeSlider').value=state.size;
+    el('sizeVal').textContent=state.size;
+    el('zoomSelect').value=state.zoom;
+    el('modeSelect').value=page().mode||state.mode;
+    initStoredHandle(); updateDriveUi();
+    setTimeout(()=>el('modal').classList.add('show'),350);
+    setTimeout(()=>autoReconnectDrive(),250);
+  }
   function resizeCanvas(h){canvas.width=W; canvas.height=h; canvas.style.width=W+'px'; canvas.style.height=h+'px'; board.style.height=h+'px'; board.style.minHeight=h+'px';}
   function ensureHeight(y){ if(y>page().height-220){ page().height += GROW_BY; resizeCanvas(page().height); redraw(); renderImages(); renderTexts(); markDirty(); }}
   function redraw(){ const p=page(); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.lineCap='round'; ctx.lineJoin='round'; p.strokes.forEach(drawStroke); }
   function drawStroke(s){ if(!s.points || s.points.length<1) return; ctx.save(); ctx.globalCompositeOperation = s.tool==='eraser' ? 'destination-out' : 'source-over'; ctx.globalAlpha = s.tool==='highlighter' ? 0.28 : 1; ctx.strokeStyle=s.color; ctx.lineWidth=s.tool==='highlighter' ? s.size*2.3 : s.size; ctx.beginPath(); ctx.moveTo(s.points[0].x,s.points[0].y); for(let i=1;i<s.points.length;i++){ const a=s.points[i-1], b=s.points[i]; const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; ctx.quadraticCurveTo(a.x,a.y,mx,my); } if(s.points.length===1){ctx.lineTo(s.points[0].x+.1,s.points[0].y+.1)} ctx.stroke(); ctx.restore(); }
-  function renderAll(){resizeCanvas(page().height||MIN_H); redraw(); renderImages(); renderTexts(); renderPages(); setMode(page().mode||state.mode||'paper'); applyZoom();}
-  function renderPages(){ const list=el('pageList'); list.innerHTML=''; state.pages.forEach((p,i)=>{ const d=document.createElement('div'); d.className='pageItem'+(i===state.current?' active':''); d.innerHTML=`<div class="pageDot">${i+1}</div><div class="pageName"><strong></strong><span>${p.images.length} images · ${p.strokes.length} strokes</span></div>`; d.querySelector('strong').textContent=p.name; d.onclick=()=>{state.current=i; clearSelection(); renderAll(); saveLocal();}; list.appendChild(d); }); }
+  function renderAll(){resizeCanvas(page().height||MIN_H); redraw(); renderImages(); renderTexts(); renderPages(); setMode(page().mode||state.mode||'paper',false); applyZoom();}
+  function renderPages(){ const list=el('pageList'); list.innerHTML=''; state.pages.forEach((p,i)=>{ const d=document.createElement('div'); d.className='pageItem'+(i===state.current?' active':''); d.innerHTML=`<div class="pageDot">${i+1}</div><div class="pageName"><strong></strong><span>${p.images.length} images · ${p.strokes.length} strokes</span></div>`; d.querySelector('strong').textContent=p.name; d.onclick=()=>{state.current=i; clearSelection(); state.mode=page().mode||preferences.mode||'paper'; preferences.mode=state.mode; savePreferences(); renderAll(); saveLocal();}; list.appendChild(d); }); }
   function renderImages(){ imageLayer.innerHTML=''; page().images.forEach(img=>{ const wrap=document.createElement('div'); wrap.style.position='absolute'; wrap.style.left=img.x+'px'; wrap.style.top=img.y+'px'; wrap.style.width=img.w+'px'; wrap.style.height=img.h+'px'; wrap.style.zIndex=String(img.z||1); const im=document.createElement('img'); im.className='imageObj'+(state.selectedImageId===img.id?' selected':''); im.src=img.src; im.draggable=false; im.style.width='100%'; im.style.height='100%'; const handle=document.createElement('div'); handle.className='resizeHandle'; wrap.appendChild(im); wrap.appendChild(handle); imageLayer.appendChild(wrap); im.addEventListener('pointerdown',e=>startMoveImage(e,img,wrap)); handle.addEventListener('pointerdown',e=>startResizeImage(e,img,wrap)); }); }
   function renderTexts(){ textLayer.innerHTML=''; page().texts.forEach(t=>{ const d=document.createElement('div'); d.className='textObj'; d.contentEditable='true'; d.textContent=t.text||''; d.style.left=t.x+'px'; d.style.top=t.y+'px'; d.style.fontSize=(t.size||30)+'px'; d.style.color=t.color||state.color; d.dataset.id=t.id; d.onfocus=()=>{state.selectedTextId=t.id}; d.oninput=()=>{t.text=d.textContent; markDirty();}; d.addEventListener('pointerdown',e=>{ if(state.tool==='select'){startMoveText(e,t,d)} }); textLayer.appendChild(d); }); }
   function boardPoint(e){ const r=canvas.getBoundingClientRect(); return {x:(e.clientX-r.left)*(canvas.width/r.width), y:(e.clientY-r.top)*(canvas.height/r.height)}; }
@@ -226,9 +284,9 @@
   function restorePageFrom(raw){ const id=page().id; const name=page().name; const restored=JSON.parse(raw); if(!restored.id) restored.id=id; if(!restored.name) restored.name=name; state.pages[state.current]=restored; renderAll(); markDirty(); }
   function undo(){ if(state.history.length===0) return; state.redo.push(JSON.stringify(page())); restorePageFrom(state.history.pop()); toast('Undone'); }
   function redo(){ if(state.redo.length===0) return; state.history.push(JSON.stringify(page())); restorePageFrom(state.redo.pop()); toast('Redone'); }
-  function setTool(t){ state.tool=t; document.querySelectorAll('.toolBtn').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); }
+  function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('.toolBtn').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
   function clearSelection(render=true){state.selectedImageId=null;state.selectedTextId=null;if(render){renderImages();renderTexts();}}
-  function setMode(m){ state.mode=m; page().mode=m; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a';} markDirty(); }
+  function setMode(m,persist=true){ state.mode=m; page().mode=m; preferences.mode=m; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff'; state.color='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a'; state.color='#0f172a';} if(persist){savePreferences(); markDirty();} }
   function addImage(src,x=110,y=110,w=640,h=null){ const img = new Image(); img.onload=()=>{ const ratio=img.width/img.height||1; const finalW=w; const finalH=h || Math.round(w/ratio); pushHistory(); const obj={id:uid(),src,x,y,w:finalW,h:finalH,z:Date.now()}; page().images.push(obj); ensureHeight(y+finalH+400); state.selectedImageId=obj.id; setTool('select'); renderImages(); renderPages(); markDirty(); toast('Image added'); }; img.src=src; }
   function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
   async function addImageFiles(files){ for(const file of Array.from(files)){ if(file.type.startsWith('image/')) addImage(await fileToDataURL(file),90,90); } }
@@ -559,18 +617,26 @@
     }
     el('fileInput').click();
   }
-  function openProjectFile(file,handle=null){ const r=new FileReader(); r.onload=async()=>{ try{ const data=JSON.parse(r.result); if(!data.pages||!data.pages.length) throw new Error('No pages'); state.pages=data.pages; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||state.mode; state.history=[]; state.redo=[]; if(handle){projectHandle=handle; await storeHandle(handle); setStatus('Linked: '+handle.name);} renderAll(); saveLocal(); toast('Project opened'); }catch(e){alert('That file could not be opened as a SAT Canvas project.');} }; r.readAsText(file); }
+  function openProjectFile(file,handle=null){ const r=new FileReader(); r.onload=async()=>{ try{ const data=JSON.parse(r.result); if(!data.pages||!data.pages.length) throw new Error('No pages'); state.pages=data.pages; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||state.mode; preferences.mode=state.mode; savePreferences(); state.history=[]; state.redo=[]; if(handle){projectHandle=handle; await storeHandle(handle); setStatus('Linked: '+handle.name);} renderAll(); saveLocal(); toast('Project opened'); }catch(e){alert('That file could not be opened as a SAT Canvas project.');} }; r.readAsText(file); }
   async function exportPNG(){ const p=page(); const out=document.createElement('canvas'); out.width=W; out.height=p.height; const c=out.getContext('2d'); c.fillStyle = (p.mode||state.mode)==='board' ? '#101827' : '#ffffff'; c.fillRect(0,0,out.width,out.height); if((p.mode||state.mode)!=='board'){ c.strokeStyle='#e6edf5'; c.lineWidth=1; for(let x=0;x<W;x+=36){c.beginPath();c.moveTo(x,0);c.lineTo(x,p.height);c.stroke()} for(let y=0;y<p.height;y+=36){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()} } for(const im of p.images){ await drawImageTo(c,im); } c.drawImage(canvas,0,0); const a=document.createElement('a'); a.href=out.toDataURL('image/png'); a.download=(p.name||'sat-canvas')+'.png'; a.click(); toast('PNG exported'); }
   function drawImageTo(c,im){ return new Promise(resolve=>{ const image=new Image(); image.onload=()=>{c.drawImage(image,im.x,im.y,im.w,im.h); resolve();}; image.onerror=resolve; image.src=im.src; }); }
   function renamePage(){ const name=prompt('Page name:',page().name); if(name&&name.trim()){page().name=name.trim(); renderPages(); markDirty();}}
-  function newPage(){ state.pages.push(defaultPage('Page '+(state.pages.length+1))); state.current=state.pages.length-1; state.history=[];state.redo=[];renderAll();markDirty();toast('New page');}
+  function newPage(){ state.pages.push(defaultPage('Page '+(state.pages.length+1))); state.current=state.pages.length-1; state.history=[];state.redo=[];renderAll();setMode(preferences.mode||state.mode,false);markDirty();toast('New page');}
   function deletePage(){ if(state.pages.length===1){clearPage();return;} if(confirm('Delete this page?')){state.pages.splice(state.current,1);state.current=Math.max(0,state.current-1);renderAll();markDirty();}}
   function clearPage(){ if(confirm('Clear this page?')){pushHistory(); page().strokes=[];page().images=[];page().texts=[];renderAll();markDirty();}}
   function bind(){
-    document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); el(b.dataset.view+'View').classList.add('active'); setTimeout(applyZoom,60);});
+    document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+    document.querySelectorAll('[data-focus-view]').forEach(b=>b.onclick=()=>setView(b.dataset.focusView));
     document.querySelectorAll('.toolBtn').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-    el('colorPicker').oninput=e=>{state.color=e.target.value}; el('sizeSlider').oninput=e=>{state.size=Number(e.target.value);el('sizeVal').textContent=state.size};
-    el('modeSelect').onchange=e=>setMode(e.target.value); el('zoomSelect').onchange=e=>{state.zoom=e.target.value;applyZoom();}; window.addEventListener('resize',applyZoom);
+    el('colorPicker').oninput=e=>{state.color=e.target.value; preferences.color=state.color; savePreferences();};
+    el('sizeSlider').oninput=e=>{state.size=Number(e.target.value);el('sizeVal').textContent=state.size;preferences.size=state.size;savePreferences();};
+    el('modeSelect').onchange=e=>setMode(e.target.value);
+    el('zoomSelect').onchange=e=>{state.zoom=e.target.value;preferences.zoom=state.zoom;savePreferences();applyZoom();};
+    el('moreBtn').onclick=e=>{e.stopPropagation();el('moreMenu').classList.toggle('hidden');};
+    document.addEventListener('click',e=>{if(!e.target.closest('.menuWrap')) el('moreMenu').classList.add('hidden');});
+    el('focusBtn').onclick=()=>{document.body.classList.add('focus-mode');};
+    el('exitFocusBtn').onclick=()=>{document.body.classList.remove('focus-mode');};
+    window.addEventListener('resize',applyZoom);
     canvas.addEventListener('pointerdown',startDraw); canvas.addEventListener('pointermove',moveDraw); canvas.addEventListener('pointerup',endDraw); canvas.addEventListener('pointercancel',endDraw);
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
     canvasArea.addEventListener('scroll',()=>{ const bottom=canvasArea.scrollTop+canvasArea.clientHeight; if(bottom > getCurrentScale()*page().height - 500){page().height+=GROW_BY; resizeCanvas(page().height); redraw(); renderImages(); renderTexts(); markDirty();}});
@@ -578,7 +644,8 @@
     canvasArea.addEventListener('dragover',e=>{e.preventDefault();}); canvasArea.addEventListener('drop',async e=>{e.preventDefault(); if(e.dataTransfer.files.length) await addImageFiles(e.dataTransfer.files);});
     el('imageBtn').onclick=()=>el('imageInput').click(); el('imageInput').onchange=e=>addImageFiles(e.target.files); el('openBtn').onclick=openProjectPicker; el('fileInput').onchange=e=>{ if(e.target.files[0]) openProjectFile(e.target.files[0]);};
     el('connectDriveBtn').onclick=connectDrive; el('cloudSaveBtn').onclick=()=>cloudSaveProject(false); el('cloudOpenBtn').onclick=cloudOpenProject;
-    el('saveBtn').onclick=saveProject; el('saveAsBtn').onclick=saveProjectAs; el('downloadBtn').onclick=downloadProjectCopy; el('exportBtn').onclick=exportPNG; el('undoBtn').onclick=undo; el('redoBtn').onclick=redo; el('renameBtn').onclick=renamePage; el('newPageBtn').onclick=newPage; el('clearBtn').onclick=clearPage; el('deletePageBtn').onclick=deletePage; el('openDesmosBtn').onclick=()=>window.open('https://www.desmos.com/testing/collegeboard/graphing','_blank','noopener');
+    el('saveBtn').onclick=()=>{el('moreMenu').classList.add('hidden');saveProject();}; el('saveAsBtn').onclick=()=>{el('moreMenu').classList.add('hidden');saveProjectAs();}; el('downloadBtn').onclick=()=>{el('moreMenu').classList.add('hidden');downloadProjectCopy();}; el('exportBtn').onclick=()=>{el('moreMenu').classList.add('hidden');exportPNG();}; el('helpBtn').onclick=()=>{el('moreMenu').classList.add('hidden');el('modal').classList.add('show');}; el('openBtn').onclick=()=>{el('moreMenu').classList.add('hidden');openProjectPicker();};
+    el('undoBtn').onclick=undo; el('redoBtn').onclick=redo; el('renameBtn').onclick=renamePage; el('newPageBtn').onclick=newPage; el('clearBtn').onclick=clearPage; el('deletePageBtn').onclick=deletePage; el('openDesmosBtn').onclick=()=>window.open('https://www.desmos.com/testing/collegeboard/graphing','_blank','noopener');
     el('copyRefBtn').onclick=()=>addImage(REF_SRC,90,90,900); el('helpBtn').onclick=()=>el('modal').classList.add('show'); el('closeModalBtn').onclick=el('modalOkBtn').onclick=()=>el('modal').classList.remove('show');
     document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault(); if(driveState.connected || driveState.fileId) cloudSaveProject(false); else saveProject();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();} if(e.key==='Delete'&&state.tool==='select'&&state.selectedImageId){ pushHistory(); page().images=page().images.filter(i=>i.id!==state.selectedImageId); state.selectedImageId=null; renderImages(); markDirty(); }});
   }
