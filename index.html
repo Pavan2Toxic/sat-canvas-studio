@@ -161,6 +161,7 @@
   const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const DRIVE_FILE_ID_KEY = 'sat_canvas_cloud_drive_file_id_v1';
   const DRIVE_FILE_NAME_KEY = 'sat_canvas_cloud_drive_file_name_v1';
+  const DRIVE_AUTHORIZED_KEY = 'sat_canvas_cloud_drive_authorized_v1';
   const DRIVE_AUTOSAVE_MS = 3500;
   const driveState = {
     tokenClient: null,
@@ -187,7 +188,7 @@
   function setStatus(s){status.textContent=s}
   function loadLocal(){try{const raw=localStorage.getItem(LS_KEY); if(raw){const data=JSON.parse(raw); if(data.pages&&data.pages.length){state.pages=data.pages; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||'paper'; return true;}}}catch(e){} return false;}
   function saveLocal(){try{localStorage.setItem(LS_KEY, JSON.stringify({pages:state.pages,current:state.current,mode:state.mode,savedAt:Date.now()}));state.dirty=false;}catch(e){console.warn(e);setStatus('Autosave full');}}
-  function setup(){ if(!loadLocal()) state.pages=[defaultPage()]; resizeCanvas(page().height); renderAll(); bind(); applyZoom(); setMode(state.mode); setTool('pen'); initStoredHandle(); updateDriveUi(); setTimeout(()=>el('modal').classList.add('show'),350); }
+  function setup(){ if(!loadLocal()) state.pages=[defaultPage()]; resizeCanvas(page().height); renderAll(); bind(); applyZoom(); setMode(state.mode); setTool('pen'); initStoredHandle(); updateDriveUi(); setTimeout(()=>el('modal').classList.add('show'),350); setTimeout(()=>autoReconnectDrive(),250); }
   function resizeCanvas(h){canvas.width=W; canvas.height=h; canvas.style.width=W+'px'; canvas.style.height=h+'px'; board.style.height=h+'px'; board.style.minHeight=h+'px';}
   function ensureHeight(y){ if(y>page().height-220){ page().height += GROW_BY; resizeCanvas(page().height); redraw(); renderImages(); renderTexts(); markDirty(); }}
   function redraw(){ const p=page(); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.lineCap='round'; ctx.lineJoin='round'; p.strokes.forEach(drawStroke); }
@@ -240,11 +241,11 @@
       setStatus('Edit config.js');
       return;
     }
-    save.disabled = false;
-    open.disabled = false;
-    connect.textContent = driveState.connected ? 'Google Connected' : 'Sign in with Google';
+    save.disabled = !driveState.connected && !driveState.fileId;
+    open.disabled = !driveState.connected && !driveState.fileId;
+    connect.textContent = driveState.connected ? 'Google Connected' : (driveState.fileId || localStorage.getItem(DRIVE_AUTHORIZED_KEY)==='1' ? 'Reconnect Google' : 'Sign in with Google');
     if(driveState.fileId && driveState.connected) setStatus('Drive autosave on');
-    else if(driveState.fileId) setStatus('Reconnect Google Drive');
+    else if(driveState.fileId) setStatus('Reconnecting to Google Drive...');
     else if(driveState.connected) setStatus('Drive connected');
     else setStatus('Ready');
   }
@@ -284,26 +285,79 @@
         if(resp.error){ reject(resp); return; }
         driveState.accessToken = resp.access_token;
         driveState.connected = true;
+        localStorage.setItem(DRIVE_AUTHORIZED_KEY, '1');
         updateDriveUi();
+        connectDriveBtnState(false);
         resolve(resp.access_token);
       };
-      driveState.tokenClient.requestAccessToken({prompt: promptMode});
+      try{
+        driveState.tokenClient.requestAccessToken({prompt: promptMode});
+      }catch(e){
+        connectDriveBtnState(false);
+        reject(e);
+      }
     });
   }
   async function connectDrive(){
+    if(driveState.connected){ toast('Google Drive already connected'); return; }
+    const priorGrant = localStorage.getItem(DRIVE_AUTHORIZED_KEY)==='1' || !!driveState.fileId;
     try{
-      await requestDriveAccess('consent');
+      connectDriveBtnState(true);
+      await requestDriveAccess(priorGrant ? '' : 'consent');
       toast('Google Drive connected');
       if(!driveState.fileId){
         await cloudSaveProject(false);
       } else {
         setStatus('Drive autosave on');
       }
-    }catch(e){ console.warn(e); toast('Google sign-in was not completed'); setStatus('Drive not connected'); }
+    }catch(e){
+      console.warn(e);
+      connectDriveBtnState(false);
+      if(priorGrant){
+        try{
+          await requestDriveAccess('consent');
+          toast('Google Drive connected');
+          if(!driveState.fileId) await cloudSaveProject(false);
+          else setStatus('Drive autosave on');
+          return;
+        }catch(e2){ console.warn(e2); }
+      }
+      toast('Google sign-in was not completed');
+      setStatus('Drive not connected');
+    }
+  }
+  async function autoReconnectDrive(){
+    if(!clientIdReady()) return;
+    const shouldReconnect = !!driveState.fileId || localStorage.getItem(DRIVE_AUTHORIZED_KEY)==='1';
+    if(!shouldReconnect || driveState.connected) return;
+    try{
+      connectDriveBtnState(true);
+      await requestDriveAccess('');
+      if(driveState.fileId) setStatus('Drive autosave on');
+      else setStatus('Drive connected');
+    }catch(e){
+      console.warn('Silent Google Drive reconnect failed', e);
+      driveState.accessToken = null;
+      driveState.connected = false;
+      connectDriveBtnState(false);
+      if(driveState.fileId) setStatus('Reconnect Google Drive');
+    }
+  }
+  function connectDriveBtnState(busy){
+    const connect = el('connectDriveBtn');
+    if(!connect) return;
+    if(busy){
+      connect.textContent = 'Connecting...';
+      connect.disabled = true;
+    }else{
+      connect.disabled = false;
+      updateDriveUi();
+    }
   }
   async function ensureDriveAccess(){
     if(driveState.accessToken) return driveState.accessToken;
-    return await requestDriveAccess(driveState.connected ? '' : 'consent');
+    const hasPriorGrant = localStorage.getItem(DRIVE_AUTHORIZED_KEY)==='1' || !!driveState.fileId;
+    return await requestDriveAccess(hasPriorGrant ? '' : 'consent');
   }
   function driveMultipart(metadata, content){
     const boundary = 'sat_canvas_boundary_' + Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -317,15 +371,29 @@
       '--' + boundary + '--';
     return {boundary, body};
   }
-  async function driveFetch(url, options={}){
+  async function driveFetch(url, options={}, retried=false){
     const token = await ensureDriveAccess();
     const headers = Object.assign({}, options.headers || {}, {Authorization:'Bearer ' + token});
     const res = await fetch(url, Object.assign({}, options, {headers}));
+    if((res.status === 401 || res.status === 403) && !retried){
+      driveState.accessToken = null;
+      driveState.connected = false;
+      updateDriveUi();
+      try{
+        await requestDriveAccess('');
+        return await driveFetch(url, options, true);
+      }catch(e){
+        driveState.accessToken = null;
+        driveState.connected = false;
+        updateDriveUi();
+        throw new Error('Google Drive authorization expired. Click Reconnect Google.');
+      }
+    }
     if(res.status === 401 || res.status === 403){
       driveState.accessToken = null;
       driveState.connected = false;
       updateDriveUi();
-      throw new Error('Google Drive permission expired. Sign in again.');
+      throw new Error('Google Drive authorization expired. Click Reconnect Google.');
     }
     return res;
   }
