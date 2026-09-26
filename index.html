@@ -162,6 +162,7 @@
   const DRIVE_FILE_ID_KEY = 'sat_canvas_cloud_drive_file_id_v1';
   const DRIVE_FILE_NAME_KEY = 'sat_canvas_cloud_drive_file_name_v1';
   const DRIVE_AUTHORIZED_KEY = 'sat_canvas_cloud_drive_authorized_v1';
+  const DRIVE_ACCOUNT_EMAIL_KEY = 'sat_canvas_cloud_drive_account_email_v1';
   const DRIVE_AUTOSAVE_MS = 3500;
   const driveState = {
     tokenClient: null,
@@ -278,6 +279,19 @@
       callback: () => {}
     });
   }
+  async function rememberDriveAccount(accessToken){
+    try{
+      const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)', {
+        headers: {Authorization: 'Bearer ' + accessToken}
+      });
+      if(!res.ok) return;
+      const data = await res.json();
+      const email = data && data.user && data.user.emailAddress;
+      if(email) localStorage.setItem(DRIVE_ACCOUNT_EMAIL_KEY, email);
+    }catch(e){
+      console.warn('Could not remember Google account', e);
+    }
+  }
   async function requestDriveAccess(promptMode='consent'){
     await initDriveAuth();
     return new Promise((resolve,reject)=>{
@@ -286,12 +300,16 @@
         driveState.accessToken = resp.access_token;
         driveState.connected = true;
         localStorage.setItem(DRIVE_AUTHORIZED_KEY, '1');
+        rememberDriveAccount(resp.access_token);
         updateDriveUi();
         connectDriveBtnState(false);
         resolve(resp.access_token);
       };
       try{
-        driveState.tokenClient.requestAccessToken({prompt: promptMode});
+        const request = {prompt: promptMode};
+        const loginHint = localStorage.getItem(DRIVE_ACCOUNT_EMAIL_KEY) || '';
+        if(loginHint) request.login_hint = loginHint;
+        driveState.tokenClient.requestAccessToken(request);
       }catch(e){
         connectDriveBtnState(false);
         reject(e);
