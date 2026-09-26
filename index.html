@@ -92,7 +92,7 @@
 
   .canvasArea{position:relative;min-height:0;overflow:auto;padding:26px 28px 80px;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.72),transparent 34%),#e9eef6;overscroll-behavior:contain;scroll-behavior:auto}
   .canvasArea.boardMode{background:#0a0f1e}
-  .paperWrap{width:max-content;margin:0 auto;transform-origin:top center;position:relative;transition:transform .14s ease}
+  .paperWrap{width:max-content;margin:0 auto;transform-origin:top left;position:relative;transition:none}
   .board{position:relative;width:1400px;min-height:1700px;border-radius:22px;box-shadow:var(--shadow);overflow:hidden;border:1px solid #d7e0eb;background-color:#fff;background-image:linear-gradient(#e6edf5 1px,transparent 1px),linear-gradient(90deg,#e6edf5 1px,transparent 1px);background-size:36px 36px}
   .board.black{background-color:#101827;background-image:none;border-color:#1e293b;box-shadow:0 18px 50px rgba(0,0,0,.35)}
     .imageLayer{position:absolute;inset:0;z-index:6}.drawLayer{position:absolute;left:0;top:0;z-index:10;touch-action:none;pointer-events:auto}.selectMode .drawLayer{pointer-events:none}.drawMode .imageLayer{pointer-events:none}.imageObj{position:absolute;user-select:none;touch-action:none;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.10);border:2px solid transparent;background:white;object-fit:contain}.imageObj.selected{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.18),0 8px 24px rgba(15,23,42,.15)}
@@ -535,6 +535,7 @@
       resizeCanvas(page().height);
       redraw();
       if(state.drawing && state.currentStroke) drawStroke(state.currentStroke);
+      applyZoom();
     }
   }
   function redraw(){ const p=page(); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.lineCap='round'; ctx.lineJoin='round'; p.strokes.forEach(drawStroke); }
@@ -778,36 +779,63 @@
   function startResizeImage(e,img,wrap){ if(state.tool!=='select') return; e.preventDefault(); e.stopPropagation(); pushHistory(); const startX=e.clientX,startY=e.clientY, ow=img.w, oh=img.h; const ratio=ow/oh; const scale=getCurrentScale(); function mm(ev){ const nw=Math.max(80,ow+(ev.clientX-startX)/scale); img.w=nw; img.h=nw/ratio; wrap.style.width=img.w+'px'; wrap.style.height=img.h+'px'; ensureHeight(img.y+img.h+500);} function up(){window.removeEventListener('pointermove',mm);window.removeEventListener('pointerup',up);markDirty();} window.addEventListener('pointermove',mm);window.addEventListener('pointerup',up); }
   function addText(x,y){ pushHistory(); const t={id:uid(),x,y,text:'Type here',size:30,color:state.color}; page().texts.push(t); setTool('select'); renderTexts(); markDirty(); setTimeout(()=>{const d=[...document.querySelectorAll('.textObj')].find(n=>n.dataset.id===t.id); if(d){d.focus(); document.execCommand('selectAll',false,null);}},50); }
   function startMoveText(e,t,d){ e.stopPropagation(); pushHistory(); const sx=e.clientX,sy=e.clientY,ox=t.x,oy=t.y,scale=getCurrentScale(); function mm(ev){t.x=ox+(ev.clientX-sx)/scale;t.y=oy+(ev.clientY-sy)/scale;d.style.left=t.x+'px';d.style.top=t.y+'px';ensureHeight(t.y+120)} function up(){window.removeEventListener('pointermove',mm);window.removeEventListener('pointerup',up);markDirty();} window.addEventListener('pointermove',mm); window.addEventListener('pointerup',up); }
-  function getCurrentScale(){ const m=paperWrap.style.transform.match(/scale\(([^)]+)\)/); return m?Number(m[1]):1; }
-  function applyZoom(){ let z=state.zoom; let scale; if(z==='fit'){ const available=Math.max(500,canvasArea.clientWidth-80); scale=Math.min(1,available/W); } else scale=Number(z); paperWrap.style.transform=`scale(${scale})`; paperWrap.style.marginBottom = Math.max(80, page().height*(scale-1)+80)+'px'; }
+  function getCurrentScale(){ return state.currentScale || 1; }
+  function applyZoom(){
+    const p = page();
+    let z = state.zoom;
+    let scale;
+    if(z === 'fit'){
+      const available = Math.max(500, canvasArea.clientWidth - 80);
+      scale = Math.min(1, available / W);
+    } else {
+      scale = Number(z) || 1;
+    }
+    state.currentScale = scale;
+
+    // Important: do NOT scale the scroll container itself.
+    // The board is visually scaled, while paperWrap has the real scaled layout size.
+    // This makes scrolling behave like a normal notebook page instead of stretching.
+    const visualH = Math.max(1, (p?.height || MIN_H) * scale);
+    paperWrap.style.transform = 'none';
+    paperWrap.style.width = (W * scale) + 'px';
+    paperWrap.style.height = visualH + 'px';
+    paperWrap.style.marginBottom = '120px';
+
+    board.style.position = 'absolute';
+    board.style.left = '0';
+    board.style.top = '0';
+    board.style.transformOrigin = 'top left';
+    board.style.transform = `scale(${scale})`;
+  }
   function maybeGrowCanvasForScroll(force=false){
     const p=page();
     if(!p) return;
+    const scale = getCurrentScale();
     const visualBottom = canvasArea.scrollTop + canvasArea.clientHeight;
-    const scaledHeight = getCurrentScale() * (p.height || MIN_H);
-    if(force || visualBottom > scaledHeight - 650){
+    const visualHeight = (p.height || MIN_H) * scale;
+    if(force || visualBottom > visualHeight - 520){
       const oldH = p.height || MIN_H;
       p.height = oldH + GROW_BY;
       resizeCanvas(p.height);
       redraw();
       renderImages();
       renderTexts();
+      applyZoom();
       // Do not autosave merely because extra blank workspace was prepared.
       refreshCurrentPageMeta();
     }
   }
   function handleCanvasWheel(e){
-    // Chromebook trackpads/touchscreens can have their scroll swallowed by the
-    // drawing canvas because the canvas must use touch-action:none for clean ink.
-    // Manually scroll the workspace when the pointer is over the drawing area.
-    if(e.ctrlKey) return; // preserve pinch/browser zoom gestures
-    if(state.drawing) return;
+    // Allow normal trackpad/mouse-wheel scrolling over the canvas.
+    // Prevent the page/body from taking the wheel, then scroll the actual workspace.
+    // Ctrl+wheel is left alone so browser pinch/zoom gestures are not hijacked.
+    if(e.ctrlKey || state.drawing) return;
     const dx = Number(e.deltaX) || 0;
     const dy = Number(e.deltaY) || 0;
     if(!dx && !dy) return;
     e.preventDefault();
-    if(e.shiftKey && Math.abs(dy) > Math.abs(dx)) canvasArea.scrollLeft += dy;
-    else { canvasArea.scrollTop += dy; canvasArea.scrollLeft += dx; }
+    canvasArea.scrollLeft += e.shiftKey && Math.abs(dy) > Math.abs(dx) ? dy : dx;
+    if(!(e.shiftKey && Math.abs(dy) > Math.abs(dx))) canvasArea.scrollTop += dy;
     maybeGrowCanvasForScroll(false);
   }
   function projectPayload(){ return {app:'SAT Canvas Studio',version:3,savedAt:new Date().toISOString(),folders:state.folders,pages:state.pages,current:state.current,mode:state.mode}; }
@@ -1154,8 +1182,8 @@
     el('focusZoomSelect').onchange=e=>{state.zoom=e.target.value;el('zoomSelect').value=state.zoom;preferences.zoom=state.zoom;savePreferences();applyZoom();};
     el('moreBtn').onclick=e=>{e.stopPropagation();el('moreMenu').classList.toggle('hidden');};
     document.addEventListener('click',e=>{if(!e.target.closest('.menuWrap')) el('moreMenu').classList.add('hidden');if(!e.target.closest('.folderHeader')) closeMenus();});
-    el('focusBtn').onclick=()=>{document.body.classList.add('focus-mode');el('focusMoreMenu').classList.remove('show');resetFocusDockPosition();toggleFocusCompact(!!preferences.focusCompact);};
-    el('exitFocusBtn').onclick=()=>{document.body.classList.remove('focus-mode');el('focusMoreMenu').classList.remove('show');};
+    el('focusBtn').onclick=()=>{document.body.classList.add('focus-mode');el('focusMoreMenu').classList.remove('show');resetFocusDockPosition();toggleFocusCompact(!!preferences.focusCompact);setTimeout(()=>{applyZoom();maybeGrowCanvasForScroll(false);},0);};
+    el('exitFocusBtn').onclick=()=>{document.body.classList.remove('focus-mode');el('focusMoreMenu').classList.remove('show');setTimeout(applyZoom,0);};
     el('focusUndoBtn').onclick=undo;
     el('focusRedoBtn').onclick=redo;
     el('focusDeleteLastBtn').onclick=deleteLast;
