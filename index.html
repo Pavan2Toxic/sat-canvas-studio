@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SAT Canvas Studio</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230f172a'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Arial,sans-serif' font-size='38' font-weight='700' fill='white'%3ES%3C/text%3E%3C/svg%3E" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230f172a'/%3E%3Cpath d='M18 44 34 10l12 10-16 34-12-10Z' fill='%232563eb'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='Arial,sans-serif' font-size='32' font-weight='800' fill='white'%3ES%3C/text%3E%3C/svg%3E" />
 <meta name="theme-color" content="#0f172a" />
 <style>
   :root{
@@ -82,7 +82,7 @@
   .workspace{height:100%;min-width:0;display:grid;grid-template-rows:var(--toolbarH) 1fr;background:#eef2f7;position:relative}
   .toolbar{height:var(--toolbarH);display:flex;align-items:center;gap:9px;padding:7px 10px;border-bottom:1px solid rgba(148,163,184,.45);background:rgba(255,255,255,.84);backdrop-filter:blur(10px);overflow-x:auto;z-index:30}
   .toolBtn{min-width:36px;height:36px;border:1px solid #dbe4ef;background:white;border-radius:11px;display:grid;place-items:center;cursor:pointer;font-weight:900;color:#0f172a;box-shadow:0 1px 0 rgba(15,23,42,.03)}
-  .toolBtn svg{width:19px;height:19px}.toolBtn.active{background:#0f172a;color:white;border-color:#0f172a}.toolBtn.active svg{stroke:white}
+  .toolBtn svg{width:19px;height:19px;display:block}.btn svg{display:block}.toolBtn.active{background:#0f172a;color:white;border-color:#0f172a}.toolBtn.active svg{stroke:white}
   .divider{width:1px;height:32px;background:#dbe4ef;margin:0 3px;flex:none}
   .control{display:flex;align-items:center;gap:8px;border:1px solid #dbe4ef;background:white;border-radius:13px;padding:6px 8px;height:36px;flex:none}
   .control label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:#64748b}
@@ -141,6 +141,75 @@
   .drawLayer{will-change:contents}
   .canvasArea, .board, .drawLayer{contain:layout paint style}
   .focusDock{will-change:left,top}
+
+  /* v16 appearance system */
+  body{--theme-bg:#eef2f7;--theme-panel:#fff;--theme-soft:#f8fafc;--theme-ink:#172033;--theme-muted:#64748b;--theme-line:#dbe4ef;--theme-control:#fff;--theme-accent:#2563eb;--theme-danger:#dc2626;--theme-canvas:#e9eef6;--theme-menu:#fff;--theme-hover:#f1f5f9;--theme-modal:#fff;--theme-modal-soft:#f8fafc}
+  body.theme-dark{--theme-bg:#101620;--theme-panel:#171f2d;--theme-soft:#1c2635;--theme-ink:#edf3fb;--theme-muted:#9aa8bc;--theme-line:#2c394c;--theme-control:#1a2433;--theme-accent:#79aefc;--theme-danger:#ff8f8f;--theme-canvas:#0d1320;--theme-menu:#182230;--theme-hover:#233044;--theme-modal:#17202d;--theme-modal-soft:#111925;color-scheme:dark}
+  body.theme-device{color-scheme:light}
+  @media(prefers-color-scheme:dark){body.theme-device{color-scheme:dark}}
+  body.theme-dark .app{background:linear-gradient(180deg,#121824,#101620)}
+  body.theme-dark .topbar,body.theme-dark .sidebar,body.theme-dark .toolbar{background:rgba(23,31,45,.94);border-color:var(--theme-line)}
+  body.theme-dark .brandText strong,body.theme-dark .notebookTitle,body.theme-dark .seg button,body.theme-dark .btn,body.theme-dark .control label,body.theme-dark .select,body.theme-dark .toolBtn,body.theme-dark .notebookIconBtn{color:var(--theme-ink)}
+  body.theme-dark .brandText span,body.theme-dark .notebookSub,body.theme-dark .sideTools span,body.theme-dark .sideLinkBtn{color:var(--theme-muted)}
+  body.theme-dark .seg{background:#1c2635;border-color:var(--theme-line)}
+  body.theme-dark .seg button.active{background:#eef4fb;color:#111827}
+  body.theme-dark .btn,body.theme-dark .toolBtn,body.theme-dark .notebookIconBtn,body.theme-dark .control,body.theme-dark .select{background:var(--theme-control);border-color:var(--theme-line);box-shadow:none;color:var(--theme-ink)}
+  body.theme-dark .btn:hover,body.theme-dark .toolBtn:hover,body.theme-dark .notebookIconBtn:hover{background:var(--theme-hover)}
+  body.theme-dark .btn.primary{background:#eaf2ff;color:#111827;border-color:#eaf2ff}
+  body.theme-dark .btn.blue{background:#4d8ff7;color:#08121f;border-color:#4d8ff7}
+  body.theme-dark .btn.danger{color:var(--theme-danger)}
+  body.theme-dark .toolBtn.active{background:#eef4fb;color:#111827;border-color:#eef4fb}
+  body.theme-dark .toolBtn.active svg{stroke:#111827}
+  body.theme-dark .searchWrap input,body.theme-dark .inlinePageInput{background:#121a27;border-color:var(--theme-line);color:var(--theme-ink)}
+  body.theme-dark .folder,body.theme-dark .pageItem,body.theme-dark .sideHint{background:#192331;border-color:var(--theme-line);color:var(--theme-ink);box-shadow:none}
+  body.theme-dark .folderHeader:hover,body.theme-dark .folderMenu button:hover,body.theme-dark .menu button:hover{background:var(--theme-hover)}
+  body.theme-dark .folderName,body.theme-dark .folderToggle,body.theme-dark .folderMenuBtn,body.theme-dark .pageName strong{color:var(--theme-ink)}
+  body.theme-dark .folderCount,body.theme-dark .pageName span,body.theme-dark .emptyFolder{color:var(--theme-muted)}
+  body.theme-dark .pageDot{background:#222d3c;color:#dce7f5}
+  body.theme-dark .folderGlyph{background:#3a2e16;color:#f5c763}
+  body.theme-dark .folderMenu,body.theme-dark .menu{background:var(--theme-menu);border-color:var(--theme-line);box-shadow:0 22px 58px rgba(0,0,0,.34)}
+  body.theme-dark .folderMenu button,body.theme-dark .menu button{color:var(--theme-ink)}
+  body.theme-dark .card{background:var(--theme-panel);border-color:var(--theme-line);box-shadow:none;color:var(--theme-ink)}
+  body.theme-dark .cardHead{border-color:var(--theme-line)}
+  body.theme-dark .desmosView,body.theme-dark .refView{background:var(--theme-bg);color:var(--theme-ink)}
+  body.theme-dark .canvasArea{background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.035),transparent 34%),var(--theme-canvas)}
+  body.theme-dark .modalBackdrop{background:rgba(1,5,12,.72)}
+  body.theme-dark .modal{background:var(--theme-modal);border-color:var(--theme-line);color:var(--theme-ink)}
+  body.theme-dark .modalTop,body.theme-dark .modalActions{border-color:var(--theme-line)}
+  body.theme-dark .modalActions{background:var(--theme-modal-soft)}
+  body.theme-dark .modalBody{color:#c7d2e1}
+  body.theme-dark .kbd{background:#202b3b;border-color:var(--theme-line);color:var(--theme-ink)}
+  body.theme-dark .settingsCard{background:#1a2433;border-color:var(--theme-line)}
+  body.theme-dark .settingsCard select{background:#121a27;border-color:var(--theme-line);color:var(--theme-ink)}
+  body.theme-dark .focusDock{background:rgba(18,26,39,.97);border-color:#334155;color:#edf3fb;box-shadow:0 20px 48px rgba(0,0,0,.45)}
+  body.theme-dark .focusToolBtn.active,body.theme-dark .focusViewBtn.active{background:#edf3fb;color:#101827}
+  body.theme-dark .focusSelect{background:#243246;color:#edf3fb}
+  body.theme-dark .focusMoreMenu{background:#182230;border-color:#334155}
+  .iconOnly{width:36px!important;min-width:36px;height:36px;padding:0!important;display:inline-grid!important;place-items:center!important}
+  .iconOnly svg{width:18px;height:18px;display:block}
+  .focusDock{bottom:14px;top:auto;left:50%;transform:translateX(-50%);cursor:grab;user-select:none}
+  .focusDock:active{cursor:grabbing}
+  .focusGrip{display:none}
+  .focusDock.compact{padding:6px 7px;border-radius:14px;gap:5px}
+  .focusDock.compact .focusExpandable{display:none}
+  .focusDock.compact .focusDivider{display:none}
+  .focusDock.compact .focusCompactCore{display:flex}
+  .focusCompactCore{display:none;align-items:center;gap:4px}
+  .focusCompactToggle{width:30px;height:30px;border:0;background:transparent;color:currentColor;border-radius:9px;display:grid;place-items:center;cursor:pointer}
+  .focusCompactToggle:hover{background:rgba(127,145,170,.14)}
+  .focusCompactToggle svg{width:16px;height:16px}
+  .settingsWrap{max-width:700px}
+  .settingsBody{max-height:min(72vh,650px);overflow:auto;padding:18px}
+  .settingsSection{margin-bottom:18px}.settingsSection:last-child{margin-bottom:0}
+  .settingsSection h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px;color:var(--theme-muted)}
+  .settingsCard{background:#f8fafc;border:1px solid #dbe4ef;border-radius:14px;padding:13px 14px}
+  .settingsRow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0}
+  .settingsRow+.settingsRow{border-top:1px solid var(--theme-line)}
+  .settingsRow strong{display:block;font-size:12px;color:var(--theme-ink)}
+  .settingsHint{font-size:10px;color:var(--theme-muted);margin-top:3px;line-height:1.4}
+  .settingsCard select{height:34px;border:1px solid var(--theme-line);border-radius:10px;padding:0 10px;background:var(--theme-control);color:var(--theme-ink);font-size:11px;font-weight:800}
+  .settingsCard input[type=checkbox]{width:17px;height:17px;accent-color:var(--theme-accent);cursor:pointer}
+  @media(max-width:780px){.focusDock{max-width:calc(100vw - 10px)}.focusDock.compact{left:8px;right:8px;transform:none;justify-content:center}.settingsBody{max-height:78vh}}
 </style>
 <script src="config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -162,7 +231,7 @@
         <button id="openBtn">Open Local</button>
         <button id="downloadBtn">Download Copy</button>
         <button id="exportBtn">Export PNG</button>
-        <button id="helpBtn">Help</button>
+        <button id="settingsBtn">Settings</button><button id="helpBtn">Help</button>
       </div>
     </div>
     <button id="focusBtn" class="btn" title="Hide the app chrome and focus on your work">Focus</button>
@@ -170,7 +239,7 @@
   </header>
   <div id="focusDock" class="focusDock" aria-label="Focus workspace controls">
     <button id="focusGrip" class="focusGrip" title="Drag to move the focus toolbar" aria-label="Drag toolbar">⋮⋮</button>
-    <div class="focusGroup" aria-label="Drawing tools">
+    <div class="focusGroup focusExpandable" aria-label="Drawing tools">
       <button class="focusToolBtn active" data-tool="pen" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
       <button class="focusToolBtn" data-tool="highlighter" title="Highlighter" aria-label="Highlighter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 6 6"/><path d="m5 19 5-1 9-9a2.1 2.1 0 0 0-3-3l-9 9-2 4Z"/><path d="m14 6 4 4"/></svg></button>
       <button class="focusToolBtn" data-tool="eraser" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 21-4-4 12-12a2.8 2.8 0 0 1 4 4L8 20Z"/><path d="M14 7 6 15"/><path d="M11 21h10"/></svg></button>
@@ -182,7 +251,7 @@
       <select id="focusModeSelect" class="focusSelect" title="Board mode" aria-label="Board mode"><option value="paper">Paper</option><option value="board">Blackboard</option></select>
     </div>
     <div class="focusDivider"></div>
-    <div class="focusGroup" aria-label="Actions">
+    <div class="focusGroup focusExpandable" aria-label="Actions">
       <button id="focusUndoBtn" class="focusActionBtn" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M5 9h9a6 6 0 0 1 6 6v1"/></svg></button>
       <button id="focusRedoBtn" class="focusActionBtn" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 14 5-5-5-5"/><path d="M19 9h-9a6 6 0 0 0-6 6v1"/></svg></button>
       <button id="focusDeleteLastBtn" class="focusActionBtn" title="Delete last stroke or selected item" aria-label="Delete last"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M7 7l1 13h8l1-13"/><path d="M9 7V4h6v3"/></svg></button>
@@ -205,9 +274,16 @@
           <button data-focus-action="save">Save to Drive</button>
           <button data-focus-action="open">Open from Drive</button>
           <button data-focus-action="download">Download backup</button>
-          <button data-focus-action="export">Export PNG</button>
+          <button data-focus-action="export">Export PNG</button><button data-focus-action="settings">Settings</button>
         </div>
       </div>
+      <div id="focusCompactCore" class="focusCompactCore" aria-label="Compact tools">
+        <button class="focusToolBtn" data-tool="pen" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button id="focusCompactUndoBtn" class="focusActionBtn" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M5 9h9a6 6 0 0 1 6 6v1"/></svg></button>
+        <button id="focusCompactDeleteBtn" class="focusActionBtn" title="Delete last" aria-label="Delete last"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+      </div>
+      <button id="focusExpandToggle" class="focusCompactToggle" title="Collapse toolbar" aria-label="Collapse toolbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 14 5-5 5 5"/></svg></button>
+      <button id="focusCompactToggle" class="focusCompactToggle hidden" title="Expand toolbar" aria-label="Expand toolbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 10 5 5 5-5"/></svg></button>
       <button id="exitFocusBtn" class="focusViewBtn" title="Exit Focus" aria-label="Exit Focus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 8 4 4"/><path d="M4 9V4h5"/><path d="M16 16l4 4"/><path d="M20 15v5h-5"/><path d="M16 8l4-4"/><path d="M20 9V4h-5"/><path d="M8 16l-4 4"/><path d="M4 15v5h5"/></svg></button>
     </div>
   </div>
@@ -236,7 +312,7 @@
         <div class="control"><label>Zoom</label><select id="zoomSelect" class="select"><option value="fit">Fit</option><option value="0.75">75%</option><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select></div>
         <div class="control"><label>Mode</label><select id="modeSelect" class="select"><option value="paper">Paper</option><option value="board">Blackboard</option></select></div>
         <div class="divider"></div>
-        <button id="undoBtn" class="btn">Undo</button><button id="redoBtn" class="btn">Redo</button><button id="deleteLastBtn" class="btn" title="Delete the last stroke or selected item" aria-label="Delete last"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M7 7l1 13h8l1-13"/><path d="M9 7V4h6v3"/></svg></button><button id="imageBtn" class="btn">Add Image</button><button id="renameBtn" class="btn">Rename</button><button id="clearBtn" class="btn danger">Clear</button><button id="deletePageBtn" class="btn danger">Delete Page</button>
+        <button id="undoBtn" class="btn">Undo</button><button id="redoBtn" class="btn">Redo</button><button id="deleteLastBtn" class="btn iconOnly danger" title="Delete the last stroke or selected item" aria-label="Delete last"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button><button id="imageBtn" class="btn">Add Image</button><button id="renameBtn" class="btn">Rename</button><button id="clearBtn" class="btn danger">Clear</button><button id="deletePageBtn" class="btn danger">Delete Page</button>
       </div>
 
       <div id="canvasView" class="view canvasView active">
@@ -263,6 +339,21 @@
 <input id="fileInput" type="file" accept=".satcanvas,application/json" class="hidden">
 <input id="imageInput" type="file" accept="image/*" class="hidden">
 <div id="toast" class="toast"></div>
+<div id="settingsModal" class="modalBackdrop"><div class="modal settingsWrap">
+  <div class="modalTop"><div><h3>Settings</h3><div style="font-size:10px;color:var(--theme-muted);margin-top:3px">Appearance, canvas behavior, and workspace preferences</div></div><button id="closeSettingsBtn" class="btn iconOnly" title="Close settings" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="settingsBody">
+    <section class="settingsSection"><h4>Appearance</h4><div class="settingsCard">
+      <div class="settingsRow"><div><strong>Theme</strong><div class="settingsHint">Choose light, dark, or follow your Chromebook.</div></div><select id="themeSelect"><option value="device">Device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+      <div class="settingsRow"><div><strong>Link canvas mode to theme</strong><div class="settingsHint">Light → Paper, Dark → Blackboard. You can still switch modes manually.</div></div><input id="themeModeLink" type="checkbox" /></div>
+    </div></section>
+    <section class="settingsSection"><h4>Canvas</h4><div class="settingsCard">
+      <div class="settingsRow"><div><strong>New pages start in</strong><div class="settingsHint">Choose whether new pages follow the theme/current preference or use a fixed canvas mode.</div></div><select id="newPageMode"><option value="follow">Follow theme / current preference</option><option value="paper">Paper</option><option value="board">Blackboard</option></select></div>
+      <div class="settingsRow"><div><strong>Focus toolbar</strong><div class="settingsHint">It opens at the bottom. Drag its background to reposition it, or collapse it for more drawing space.</div></div><select id="focusCompactPref"><option value="expanded">Expanded</option><option value="compact">Compact</option></select></div>
+    </div></section>
+    <section class="settingsSection"><h4>Current preferences</h4><div class="settingsCard"><div id="settingsSummary" class="settingsHint"></div></div></section>
+  </div>
+  <div class="modalActions"><button id="resetPreferencesBtn" class="btn danger">Reset preferences</button><button id="closeSettingsBtn2" class="btn primary">Done</button></div>
+</div></div>
 <div id="modal" class="modalBackdrop"><div class="modal"><div class="modalTop"><h3>Google Drive cloud version</h3><button id="closeModalBtn" class="btn">Close</button></div><div class="modalBody"><p>This version is meant to be hosted on GitHub Pages, not opened as a raw local file.</p><p>Click <b>Sign in with Google</b> to authorize Drive access. The app will create a <b>.satcanvas</b> project file in your Google Drive and autosave back to it while you work.</p><p>Keep using <b>Download Copy</b> sometimes as an emergency backup. Shortcuts: <span class="kbd">Ctrl</span> + <span class="kbd">S</span> saves, <span class="kbd">Ctrl</span> + <span class="kbd">V</span> pastes an image, <span class="kbd">Ctrl</span> + <span class="kbd">Z</span> undo.</p></div><div class="modalActions"><button id="modalOkBtn" class="btn primary">Got it</button></div></div></div>
 <script>
 (function(){
@@ -302,10 +393,14 @@
   const board = el('board'); const paperWrap = el('paperWrap'); const canvasArea = el('canvasArea');
   const imageLayer = el('imageLayer'); const textLayer = el('textLayer');
   const status = el('status');
-  let preferences = {mode:'paper',zoom:'fit',tool:'pen',color:'#0f172a',size:8,activeView:'canvas',activeFolderId:'',folderCollapsed:{}};
+  let preferences = {mode:'paper',modeSource:'themeAuto',theme:'device',linkThemeMode:true,newPageMode:'follow',focusCompact:false,zoom:'fit',tool:'pen',color:'#0f172a',size:8,activeView:'canvas',activeFolderId:'',folderCollapsed:{}};
   function loadPreferences(){ try{ const raw=localStorage.getItem(PREFS_KEY); if(raw){ const p=JSON.parse(raw); preferences=Object.assign(preferences,p||{}); } }catch(e){} }
   function savePreferences(){ try{ localStorage.setItem(PREFS_KEY, JSON.stringify(preferences)); }catch(e){} }
   function syncStateFromPreferences(){ state.tool=preferences.tool||state.tool; state.color=preferences.color||state.color; state.size=Number(preferences.size||state.size); state.zoom=preferences.zoom||state.zoom; state.activeView=preferences.activeView||state.activeView; }
+  function effectiveThemeIsDark(theme=preferences.theme){if(theme==='dark')return true;if(theme==='light')return false;return !!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);}
+  function updateSettingsSummary(){const s=el('settingsSummary');if(!s)return;const theme=preferences.theme==='device'?'Device':(preferences.theme==='dark'?'Dark':'Light');const mode=preferences.mode==='board'?'Blackboard':'Paper';s.textContent=`Theme: ${theme} · Canvas: ${mode} · New pages: ${preferences.newPageMode||'follow'} · Focus: ${preferences.focusCompact?'Compact':'Expanded'}`;if(el('themeSelect'))el('themeSelect').value=preferences.theme||'device';if(el('themeModeLink'))el('themeModeLink').checked=preferences.linkThemeMode!==false;if(el('newPageMode'))el('newPageMode').value=preferences.newPageMode||'follow';if(el('focusCompactPref'))el('focusCompactPref').value=preferences.focusCompact?'compact':'expanded';}
+  function applyTheme(theme=preferences.theme||'device',persist=true,autoMode=false){const t=['device','light','dark'].includes(theme)?theme:'device';preferences.theme=t;document.body.classList.remove('theme-device','theme-light','theme-dark');document.body.classList.add('theme-'+t);const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',effectiveThemeIsDark(t)?'#101620':'#eef2f7');if(autoMode||(preferences.linkThemeMode&&preferences.modeSource==='themeAuto')){const desired=effectiveThemeIsDark(t)?'board':'paper';if(page()&&page().mode!==desired)setMode(desired,true,'themeAuto');else preferences.mode=desired;preferences.modeSource='themeAuto';}if(persist)savePreferences();updateSettingsSummary();}
+  function toggleFocusCompact(compact){preferences.focusCompact=!!compact;savePreferences();const d=el('focusDock');if(d)d.classList.toggle('compact',!!compact);if(el('focusExpandToggle'))el('focusExpandToggle').classList.toggle('hidden',!!compact);if(el('focusCompactToggle'))el('focusCompactToggle').classList.toggle('hidden',!compact);updateSettingsSummary();}
   function defaultPage(name='Page 1', folderId=''){
     const fid = folderId || preferences.activeFolderId || (state.folders[0] && state.folders[0].id) || '';
     return {id:uid(), name, folderId:fid, height:MIN_H, mode:state.mode, strokes:[], images:[], texts:[], createdAt:Date.now()};
@@ -398,7 +493,6 @@
     syncFocusControls();
     setupFocusDock();
     initStoredHandle(); updateDriveUi();
-    setTimeout(()=>el('modal').classList.add('show'),350);
     setTimeout(()=>autoReconnectDrive(),250);
   }
   function resizeCanvas(h){canvas.width=W; canvas.height=h; canvas.style.width=W+'px'; canvas.style.height=h+'px'; board.style.height=h+'px'; board.style.minHeight=h+'px';}
@@ -519,40 +613,18 @@
   }
   function setTool(t,persist=true){ state.tool=t; document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t)); board.classList.toggle('selectMode',t==='select'); board.classList.toggle('drawMode',t!=='select'); if(t!=='select') clearSelection(false); if(persist){preferences.tool=t;savePreferences();}}
   function clearSelection(render=true){state.selectedImageId=null;state.selectedTextId=null;if(render){renderImages();renderTexts();}}
-  function setMode(m,persist=true){ state.mode=m; page().mode=m; preferences.mode=m; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff'; if(el('focusColorPicker')) el('focusColorPicker').value='#ffffff'; state.color='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a'; if(el('focusColorPicker')) el('focusColorPicker').value='#0f172a'; state.color='#0f172a';} if(el('modeSelect')) el('modeSelect').value=m; if(el('focusModeSelect')) el('focusModeSelect').value=m; if(persist){savePreferences(); markDirty();} }
+  function setMode(m,persist=true,source='manual'){ state.mode=m; page().mode=m; preferences.mode=m; if(persist)preferences.modeSource=source||'manual'; const black=m==='board'; board.classList.toggle('black',black); canvasArea.classList.toggle('boardMode',black); if(black && state.color==='#0f172a'){state.color='#ffffff'; el('colorPicker').value='#ffffff'; if(el('focusColorPicker')) el('focusColorPicker').value='#ffffff'; state.color='#ffffff';} if(!black && state.color==='#ffffff'){state.color='#0f172a'; el('colorPicker').value='#0f172a'; if(el('focusColorPicker')) el('focusColorPicker').value='#0f172a'; state.color='#0f172a';} if(el('modeSelect')) el('modeSelect').value=m; if(el('focusModeSelect')) el('focusModeSelect').value=m; if(persist){savePreferences(); markDirty();} }
   function syncFocusControls(){
     if(el('focusColorPicker')) el('focusColorPicker').value=state.color;
     if(el('focusSizeSlider')) el('focusSizeSlider').value=state.size;
     if(el('focusZoomSelect')) el('focusZoomSelect').value=state.zoom;
     if(el('focusModeSelect')) el('focusModeSelect').value=state.mode;
   }
-  function loadFocusDockPosition(){
-    try{ const raw=localStorage.getItem(FOCUS_DOCK_KEY); if(raw){ const p=JSON.parse(raw); if(Number.isFinite(p.left)&&Number.isFinite(p.top)){ el('focusDock').style.left=p.left+'px'; el('focusDock').style.top=p.top+'px'; el('focusDock').style.bottom='auto'; el('focusDock').style.transform='none'; el('focusDock').dataset.positioned='1'; } } }catch(e){}
-  }
-  function saveFocusDockPosition(){
-    const d=el('focusDock'); const r=d.getBoundingClientRect(); try{localStorage.setItem(FOCUS_DOCK_KEY,JSON.stringify({left:Math.round(r.left),top:Math.round(r.top)}));}catch(e){}
-  }
-  function clampFocusDock(left,top){
-    const d=el('focusDock'); const r=d.getBoundingClientRect(); const maxL=Math.max(6,window.innerWidth-r.width-6); const maxT=Math.max(6,window.innerHeight-r.height-6); return {left:Math.min(Math.max(6,left),maxL),top:Math.min(Math.max(6,top),maxT)};
-  }
-  function setupFocusDock(){
-    loadFocusDockPosition();
-    const dock=el('focusDock'), grip=el('focusGrip');
-    let drag=null;
-    grip.addEventListener('pointerdown',e=>{
-      e.preventDefault();
-      const r=dock.getBoundingClientRect();
-      dock.style.left=r.left+'px'; dock.style.top=r.top+'px'; dock.style.bottom='auto'; dock.style.transform='none'; dock.dataset.positioned='1';
-      drag={sx:e.clientX,sy:e.clientY,left:r.left,top:r.top};
-      dock.classList.add('dragging');
-      grip.setPointerCapture?.(e.pointerId);
-    });
-    window.addEventListener('pointermove',e=>{
-      if(!drag) return; const p=clampFocusDock(drag.left+(e.clientX-drag.sx),drag.top+(e.clientY-drag.sy)); dock.style.left=p.left+'px'; dock.style.top=p.top+'px';
-    });
-    window.addEventListener('pointerup',()=>{ if(!drag) return; drag=null; dock.classList.remove('dragging'); saveFocusDockPosition(); });
-    window.addEventListener('resize',()=>{ if(!dock.dataset.positioned) return; const r=dock.getBoundingClientRect(); const p=clampFocusDock(r.left,r.top); dock.style.left=p.left+'px'; dock.style.top=p.top+'px'; saveFocusDockPosition(); });
-  }
+  function loadFocusDockPosition(){resetFocusDockPosition();}
+  function resetFocusDockPosition(){const d=el('focusDock');if(!d)return;d.style.left='50%';d.style.right='auto';d.style.top='auto';d.style.bottom='14px';d.style.transform='translateX(-50%)';d.dataset.positioned='1';}
+  function saveFocusDockPosition(){}
+  function clampFocusDock(left,top){const d=el('focusDock');const r=d.getBoundingClientRect();const maxL=Math.max(6,window.innerWidth-r.width-6);const maxT=Math.max(6,window.innerHeight-r.height-6);return{left:Math.min(Math.max(6,left),maxL),top:Math.min(Math.max(6,top),maxT)};}
+  function setupFocusDock(){resetFocusDockPosition();const d=el('focusDock');let drag=null;d.addEventListener('pointerdown',e=>{if(e.target.closest('button,input,select,.focusMoreMenu'))return;e.preventDefault();const r=d.getBoundingClientRect();d.style.left=r.left+'px';d.style.top=r.top+'px';d.style.bottom='auto';d.style.right='auto';d.style.transform='none';d.dataset.positioned='1';drag={sx:e.clientX,sy:e.clientY,left:r.left,top:r.top};d.classList.add('dragging');d.setPointerCapture?.(e.pointerId);});window.addEventListener('pointermove',e=>{if(!drag)return;const p=clampFocusDock(drag.left+(e.clientX-drag.sx),drag.top+(e.clientY-drag.sy));d.style.left=p.left+'px';d.style.top=p.top+'px';});window.addEventListener('pointerup',()=>{if(!drag)return;drag=null;d.classList.remove('dragging');});window.addEventListener('resize',()=>{if(!document.body.classList.contains('focus-mode'))return;const r=d.getBoundingClientRect();const q=clampFocusDock(r.left,r.top);d.style.left=q.left+'px';d.style.top=q.top+'px';});}
   function addImage(src,x=110,y=110,w=640,h=null){ const img = new Image(); img.onload=()=>{ const ratio=img.width/img.height||1; const finalW=w; const finalH=h || Math.round(w/ratio); pushHistory(); const obj={id:uid(),src,x,y,w:finalW,h:finalH,z:Date.now()}; page().images.push(obj); ensureHeight(y+finalH+400); state.selectedImageId=obj.id; setTool('select'); renderImages(); renderPages(); markDirty(); toast('Image added'); }; img.src=src; }
   function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
   async function addImageFiles(files){ for(const file of Array.from(files)){ if(file.type.startsWith('image/')) addImage(await fileToDataURL(file),90,90); } }
@@ -906,7 +978,7 @@
     el('focusZoomSelect').onchange=e=>{state.zoom=e.target.value;el('zoomSelect').value=state.zoom;preferences.zoom=state.zoom;savePreferences();applyZoom();};
     el('moreBtn').onclick=e=>{e.stopPropagation();el('moreMenu').classList.toggle('hidden');};
     document.addEventListener('click',e=>{if(!e.target.closest('.menuWrap')) el('moreMenu').classList.add('hidden');if(!e.target.closest('.folderHeader')) closeMenus();});
-    el('focusBtn').onclick=()=>{document.body.classList.add('focus-mode');el('focusMoreMenu').classList.remove('show');};
+    el('focusBtn').onclick=()=>{document.body.classList.add('focus-mode');el('focusMoreMenu').classList.remove('show');resetFocusDockPosition();toggleFocusCompact(!!preferences.focusCompact);};
     el('exitFocusBtn').onclick=()=>{document.body.classList.remove('focus-mode');el('focusMoreMenu').classList.remove('show');};
     el('focusUndoBtn').onclick=undo;
     el('focusRedoBtn').onclick=redo;
@@ -928,6 +1000,32 @@
     el('copyRefBtn').onclick=()=>addImage(REF_SRC,90,90,900); el('helpBtn').onclick=()=>el('modal').classList.add('show'); el('closeModalBtn').onclick=el('modalOkBtn').onclick=()=>el('modal').classList.remove('show');
     document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault(); if(driveState.connected || driveState.fileId) cloudSaveProject(false); else saveProject();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();} if(e.key==='Delete'&&state.tool==='select'&&(state.selectedImageId||state.selectedTextId)){ e.preventDefault(); deleteLast(); }});
   }
+  const _newPageV15=newPage;
+  newPage=function(){const before=state.pages.length;_newPageV15();if(state.pages.length>before){const nm=preferences.newPageMode==='paper'?'paper':(preferences.newPageMode==='board'?'board':(preferences.linkThemeMode?(effectiveThemeIsDark(preferences.theme)?'board':'paper'):(preferences.mode||state.mode)));page().mode=nm;setMode(nm,false);markDirty();}};
+  const _setupV15=setup;
+  setup=function(){
+    _setupV15();
+    if(!preferences.theme)preferences.theme='device';
+    if(typeof preferences.linkThemeMode!=='boolean')preferences.linkThemeMode=true;
+    if(!preferences.newPageMode)preferences.newPageMode='follow';
+    if(!preferences.modeSource)preferences.modeSource='themeAuto';
+    applyTheme(preferences.theme,false,preferences.linkThemeMode&&preferences.modeSource==='themeAuto');
+    setupFocusDock();toggleFocusCompact(!!preferences.focusCompact);
+    // Settings UI
+    el('settingsBtn').onclick=()=>{el('moreMenu').classList.add('hidden');updateSettingsSummary();el('settingsModal').classList.add('show');};
+    el('closeSettingsBtn').onclick=el('closeSettingsBtn2').onclick=()=>el('settingsModal').classList.remove('show');
+    el('themeSelect').onchange=e=>{preferences.theme=e.target.value;preferences.modeSource='themeAuto';applyTheme(preferences.theme,true,true);renderAll();};
+    el('themeModeLink').onchange=e=>{preferences.linkThemeMode=!!e.target.checked;if(preferences.linkThemeMode){preferences.modeSource='themeAuto';applyTheme(preferences.theme,true,true);renderAll();}else{preferences.modeSource='manual';savePreferences();}updateSettingsSummary();};
+    el('newPageMode').onchange=e=>{preferences.newPageMode=e.target.value;savePreferences();updateSettingsSummary();};
+    el('focusCompactPref').onchange=e=>toggleFocusCompact(e.target.value==='compact');
+    el('resetPreferencesBtn').onclick=()=>{if(!confirm('Reset appearance and workspace preferences? Your pages and Google Drive files will not be deleted.'))return;preferences={mode:'paper',modeSource:'themeAuto',theme:'device',linkThemeMode:true,newPageMode:'follow',focusCompact:false,zoom:'fit',tool:'pen',color:'#0f172a',size:8,activeView:'canvas',activeFolderId:page().folderId||'',folderCollapsed:{}};savePreferences();state.tool='pen';state.color='#0f172a';state.size=8;state.zoom='fit';setTool('pen',false);setView('canvas',false);applyTheme('device',true,true);el('colorPicker').value=state.color;el('sizeSlider').value=state.size;el('sizeVal').textContent=state.size;el('zoomSelect').value=state.zoom;syncFocusControls();toggleFocusCompact(false);renderAll();toast('Preferences reset');};
+    el('focusCompactToggle').onclick=e=>{e.stopPropagation();toggleFocusCompact(false);};
+    el('focusExpandToggle').onclick=e=>{e.stopPropagation();toggleFocusCompact(true);};
+    el('focusCompactUndoBtn').onclick=undo;el('focusCompactDeleteBtn').onclick=deleteLast;
+    document.querySelectorAll('[data-focus-action="settings"]').forEach(b=>b.onclick=()=>{el('focusMoreMenu').classList.remove('show');updateSettingsSummary();el('settingsModal').classList.add('show');});
+    const mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;if(mq){const cb=()=>{if(preferences.theme==='device'&&preferences.linkThemeMode&&preferences.modeSource==='themeAuto'){applyTheme('device',true,true);renderAll();}};mq.addEventListener?.('change',cb);mq.addListener?.(cb);}
+    updateSettingsSummary();
+  };
   setup();
 })();
 </script>
