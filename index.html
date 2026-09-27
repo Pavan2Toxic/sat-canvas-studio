@@ -138,8 +138,15 @@
   .modalBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}.modalBackdrop.show{display:flex}.modal{background:white;border-radius:20px;border:1px solid #e2e8f0;box-shadow:0 28px 80px rgba(15,23,42,.35);max-width:560px;width:100%;overflow:hidden}.modal h3{margin:0;font-size:17px}.modalTop{padding:16px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}.modalBody{padding:18px;color:#475569;font-size:14px;line-height:1.5}.modalActions{display:flex;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e2e8f0;background:#f8fafc}.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#eef2f7;border:1px solid #dbe4ef;border-radius:6px;padding:1px 5px;font-size:12px;color:#334155}
   @media (max-width: 980px){:root{--sideW:0px}.sidebar{display:none}.brand{min-width:160px}.topbar{gap:7px}.btn{padding:8px 9px}.seg button{padding:7px 10px}.toolbar{padding:9px}.control label{display:none}}
 
-  .drawLayer{will-change:contents;touch-action:none;cursor:crosshair}
-  .canvasArea, .board{contain:layout style}.drawLayer{contain:layout style}
+  .drawLayer{will-change:contents;touch-action:none;cursor:crosshair;display:block}
+  /* v24 scrolling fix: keep the scroll container native and give Chrome real layout dimensions.
+     Do not transform/zoom the scroll container or the board itself.  The board gets an
+     actual scaled layout size; only the inner coordinate layers are scaled. */
+  .canvasArea{overflow:auto;overscroll-behavior:contain;scroll-behavior:auto;-webkit-overflow-scrolling:touch}
+  .paperWrap{transform:none!important;position:relative;width:max-content;margin:0 auto 140px}
+  .board{transform:none!important;zoom:1!important;position:relative;overflow:hidden}
+  .imageLayer,.drawLayer{transform-origin:top left}
+  .drawLayer{contain:layout style}
   .focusDock{will-change:left,top}
 
   /* v16 appearance system */
@@ -795,37 +802,64 @@
   function addText(x,y){ pushHistory(); const t={id:uid(),x,y,text:'Type here',size:30,color:state.color}; page().texts.push(t); setTool('select'); renderTexts(); markDirty(); setTimeout(()=>{const d=[...document.querySelectorAll('.textObj')].find(n=>n.dataset.id===t.id); if(d){d.focus(); document.execCommand('selectAll',false,null);}},50); }
   function startMoveText(e,t,d){ e.stopPropagation(); pushHistory(); const sx=e.clientX,sy=e.clientY,ox=t.x,oy=t.y,scale=getCurrentScale(); function mm(ev){t.x=ox+(ev.clientX-sx)/scale;t.y=oy+(ev.clientY-sy)/scale;d.style.left=t.x+'px';d.style.top=t.y+'px';ensureHeight(t.y+120)} function up(){window.removeEventListener('pointermove',mm);window.removeEventListener('pointerup',up);markDirty();} window.addEventListener('pointermove',mm); window.addEventListener('pointerup',up); }
   function getCurrentScale(){ return state.currentScale || 1; }
+  function currentVisualSize(){
+    const p = page();
+    const h = Math.max(MIN_H, p?.height || MIN_H);
+    const scale = getCurrentScale();
+    return {width: Math.ceil(W * scale), height: Math.ceil(h * scale), logicalHeight: h, scale};
+  }
   function applyZoom(){
     const p = page();
     if(!p) return;
     let z = state.zoom;
     let scale;
     if(z === 'fit'){
-      const available = Math.max(500, canvasArea.clientWidth - 80);
+      const available = Math.max(520, canvasArea.clientWidth - 72);
       scale = Math.min(1, available / W);
     } else {
       scale = Number(z) || 1;
     }
     state.currentScale = scale;
 
-    // Chromebook-safe zoom:
-    // The scroll area uses a real scaled wrapper size, while the actual board keeps
-    // its internal 1400px coordinate system. Chrome's CSS zoom handles the visual
-    // scaling without the transform/stretch problems caused by v20/v21.
+    // v24: Premium-widget style native scrolling.
+    // The scrollable area sees a real, physical board size. We do NOT use CSS zoom
+    // and we do NOT transform the board itself, because that caused ChromeOS to
+    // stretch visually instead of scrolling like a notebook.
     const h = Math.max(MIN_H, p.height || MIN_H);
-    paperWrap.style.transform = 'none';
-    paperWrap.style.width = Math.ceil(W * scale) + 'px';
-    paperWrap.style.height = Math.ceil(h * scale) + 'px';
-    paperWrap.style.marginBottom = '140px';
+    const visualW = Math.ceil(W * scale);
+    const visualH = Math.ceil(h * scale);
 
-    board.style.position = 'absolute';
+    paperWrap.style.transform = 'none';
+    paperWrap.style.width = visualW + 'px';
+    paperWrap.style.height = visualH + 'px';
+    paperWrap.style.marginBottom = '160px';
+
+    board.style.position = 'relative';
     board.style.left = '0';
     board.style.top = '0';
-    board.style.width = W + 'px';
-    board.style.height = h + 'px';
-    board.style.minHeight = h + 'px';
     board.style.transform = 'none';
-    board.style.zoom = String(scale);
+    board.style.zoom = '1';
+    board.style.width = visualW + 'px';
+    board.style.height = visualH + 'px';
+    board.style.minHeight = visualH + 'px';
+    board.style.backgroundSize = (36 * scale) + 'px ' + (36 * scale) + 'px';
+
+    canvas.style.width = visualW + 'px';
+    canvas.style.height = visualH + 'px';
+    canvas.style.transform = 'none';
+
+    imageLayer.style.width = W + 'px';
+    imageLayer.style.height = h + 'px';
+    imageLayer.style.transform = `scale(${scale})`;
+    imageLayer.style.transformOrigin = 'top left';
+
+    const textLayer = el('textLayer');
+    if(textLayer){
+      textLayer.style.width = W + 'px';
+      textLayer.style.height = h + 'px';
+      textLayer.style.transform = `scale(${scale})`;
+      textLayer.style.transformOrigin = 'top left';
+    }
   }
   function growCanvasBy(amount=GROW_BY){
     const p=page();
@@ -837,40 +871,23 @@
     renderImages();
     renderTexts();
     applyZoom();
-    // Important: growing blank space is layout only. It must not touch localStorage
-    // or mark the project dirty, because that old behavior correlated with the
-    // Chrome site-data/drawing bug on this Chromebook.
+    // Growing blank space is just layout, like the older premium widget. It should
+    // never mark the project dirty and never write the full project into site data.
     refreshCurrentPageMeta();
   }
   function maybeGrowCanvasForScroll(force=false){
     const p=page();
     if(!p) return;
-    const scale=getCurrentScale();
+    const {height: visualHeight} = currentVisualSize();
     const visualBottom = canvasArea.scrollTop + canvasArea.clientHeight;
-    const visualHeight = (p.height || MIN_H) * scale;
-    if(force || visualBottom > visualHeight - 650) growCanvasBy(GROW_BY);
+    if(force || visualBottom > visualHeight - 700) growCanvasBy(GROW_BY);
   }
   function handleCanvasWheel(e){
-    // Do not block Chrome's native two-finger scrolling. Chrome can make wheel
-    // listeners passive by default on root targets; the safe pattern is to let
-    // native scrolling happen, then only use a fallback if the scrollTop did not move.
+    // v24: do not hijack or preventDefault the wheel. Native Chrome scrolling is
+    // what worked in the earlier premium widget. We only check after Chrome has had
+    // a chance to scroll, then grow the notebook if the user is near the bottom.
     if(e.ctrlKey || state.drawing) return;
-    const dx = Number(e.deltaX) || 0;
-    const dy = Number(e.deltaY) || 0;
-    if(!dx && !dy) return;
-    const beforeTop = canvasArea.scrollTop;
-    const beforeLeft = canvasArea.scrollLeft;
-    requestAnimationFrame(()=>{
-      const topMoved = Math.abs(canvasArea.scrollTop - beforeTop) > 0.5;
-      const leftMoved = Math.abs(canvasArea.scrollLeft - beforeLeft) > 0.5;
-      if(!topMoved && Math.abs(dy) > 0){
-        canvasArea.scrollTop = beforeTop + dy;
-      }
-      if(!leftMoved && Math.abs(dx) > 0){
-        canvasArea.scrollLeft = beforeLeft + dx;
-      }
-      maybeGrowCanvasForScroll(false);
-    });
+    requestAnimationFrame(()=>maybeGrowCanvasForScroll(false));
   }
   function projectPayload(){ return {app:'SAT Canvas Studio',version:4,savedAt:new Date().toISOString(),folders:state.folders,pages:state.pages,current:state.current,mode:state.mode}; }
   function projectBlob(){ return new Blob([JSON.stringify(projectPayload(),null,2)],{type:'application/json'}); }
@@ -1243,8 +1260,6 @@
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
     canvasArea.addEventListener('scroll',()=>{ if(scrollGrowFrame) return; scrollGrowFrame=requestAnimationFrame(()=>{ scrollGrowFrame=0; maybeGrowCanvasForScroll(false); }); },{passive:true});
     canvasArea.addEventListener('wheel',handleCanvasWheel,{passive:true});
-    board.addEventListener('wheel',handleCanvasWheel,{passive:true});
-    canvas.addEventListener('wheel',handleCanvasWheel,{passive:true});
     document.addEventListener('paste',async e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items) return; for(const item of items){ if(item.type.startsWith('image/')){ e.preventDefault(); const f=item.getAsFile(); addImage(await fileToDataURL(f),120,120); } } });
     canvasArea.addEventListener('dragover',e=>{e.preventDefault();}); canvasArea.addEventListener('drop',async e=>{e.preventDefault(); if(e.dataTransfer.files.length) await addImageFiles(e.dataTransfer.files);});
     el('imageBtn').onclick=()=>el('imageInput').click(); el('imageInput').onchange=e=>addImageFiles(e.target.files); el('openBtn').onclick=openProjectPicker; el('fileInput').onchange=e=>{ if(e.target.files[0]) openProjectFile(e.target.files[0]);};
