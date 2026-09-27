@@ -850,9 +850,56 @@
   function saveFocusDockPosition(){}
   function clampFocusDock(left,top){const d=el('focusDock');const r=d.getBoundingClientRect();const maxL=Math.max(6,window.innerWidth-r.width-6);const maxT=Math.max(6,window.innerHeight-r.height-6);return{left:Math.min(Math.max(6,left),maxL),top:Math.min(Math.max(6,top),maxT)};}
   function setupFocusDock(){resetFocusDockPosition();const d=el('focusDock');let drag=null;d.addEventListener('pointerdown',e=>{if(e.target.closest('button,input,select,.focusMoreMenu'))return;e.preventDefault();const r=d.getBoundingClientRect();d.style.left=r.left+'px';d.style.top=r.top+'px';d.style.bottom='auto';d.style.right='auto';d.style.transform='none';d.dataset.positioned='1';drag={sx:e.clientX,sy:e.clientY,left:r.left,top:r.top};d.classList.add('dragging');d.setPointerCapture?.(e.pointerId);});window.addEventListener('pointermove',e=>{if(!drag)return;const p=clampFocusDock(drag.left+(e.clientX-drag.sx),drag.top+(e.clientY-drag.sy));d.style.left=p.left+'px';d.style.top=p.top+'px';});window.addEventListener('pointerup',()=>{if(!drag)return;drag=null;d.classList.remove('dragging');});window.addEventListener('resize',()=>{if(!document.body.classList.contains('focus-mode'))return;const r=d.getBoundingClientRect();const q=clampFocusDock(r.left,r.top);d.style.left=q.left+'px';d.style.top=q.top+'px';});}
-  function addImage(src,x=110,y=110,w=640,h=null){ const img = new Image(); img.onload=()=>{ const ratio=img.width/img.height||1; const finalW=w; const finalH=h || Math.round(w/ratio); pushHistory(); const obj={id:uid(),src,x,y,w:finalW,h:finalH,z:Date.now()}; page().images.push(obj); ensureHeight(y+finalH+400); state.selectedImageId=obj.id; setTool('select'); renderImages(); renderPages(); markDirty(); toast('Image added'); }; img.src=src; }
+  function clampNumber(n,min,max){return Math.min(Math.max(n,min),max);}
+  function visibleImageDropPoint(w=640,h=360,clientX=null,clientY=null,offset=0){
+    // Place pasted/uploaded images where the user currently is in the infinite notebook.
+    // This uses the board's current screen position, so it respects native scrolling.
+    const br=board.getBoundingClientRect();
+    const ar=canvasArea.getBoundingClientRect();
+    const p=page();
+    const scale=getCurrentScale()||1;
+    let x,y;
+    if(Number.isFinite(clientX)&&Number.isFinite(clientY)){
+      x=(clientX-br.left)/scale;
+      y=(clientY-br.top)/scale;
+    }else{
+      const visibleLeft=clampNumber((ar.left+24-br.left)/scale,0,Math.max(0,W-80));
+      const visibleTop=clampNumber((ar.top+24-br.top)/scale,0,Math.max(0,(p?.height||MIN_H)-80));
+      const visibleRight=clampNumber((ar.right-24-br.left)/scale,0,W);
+      const visibleBottom=clampNumber((ar.bottom-24-br.top)/scale,0,Math.max(MIN_H,p?.height||MIN_H));
+      const visibleW=Math.max(0,visibleRight-visibleLeft);
+      const visibleH=Math.max(0,visibleBottom-visibleTop);
+      x=visibleLeft+Math.max(20,(visibleW-w)/2);
+      y=visibleTop+Math.max(35,Math.min(95,(visibleH-h)/4));
+    }
+    x+=offset; y+=offset;
+    x=clampNumber(x,12,Math.max(12,W-w-12));
+    y=Math.max(12,y);
+    return {x:Math.round(x),y:Math.round(y)};
+  }
+  function addImage(src,x=null,y=null,w=640,h=null){
+    const img = new Image();
+    img.onload=()=>{
+      const ratio=img.width/img.height||1;
+      const finalW=Math.min(w,Math.max(220,W-80));
+      const finalH=h || Math.round(finalW/ratio);
+      const pt=(x==null||y==null)?visibleImageDropPoint(finalW,finalH):{x,y};
+      pushHistory();
+      const obj={id:uid(),src,x:pt.x,y:pt.y,w:finalW,h:finalH,z:Date.now()};
+      page().images.push(obj);
+      ensureHeight(obj.y+finalH+400);
+      state.selectedImageId=obj.id;
+      state.selectedTextId=null;
+      setTool('select');
+      renderImages();
+      renderPages();
+      markDirty();
+      toast('Image added here');
+    };
+    img.src=src;
+  }
   function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
-  async function addImageFiles(files){ for(const file of Array.from(files)){ if(file.type.startsWith('image/')) addImage(await fileToDataURL(file),90,90); } }
+  async function addImageFiles(files,clientX=null,clientY=null){ let offset=0; for(const file of Array.from(files)){ if(file.type.startsWith('image/')){ const pt=(clientX==null||clientY==null)?visibleImageDropPoint(640,360,null,null,offset):visibleImageDropPoint(640,360,clientX,clientY,offset); addImage(await fileToDataURL(file),pt.x,pt.y); offset+=28; } } }
   function normalizePointerEvent(e){
     const oe=e && (e.touches?.[0] || e.changedTouches?.[0]);
     return oe || e;
@@ -1384,13 +1431,13 @@
     canvasArea.addEventListener('scroll',()=>{ if(scrollGrowFrame) return; scrollGrowFrame=requestAnimationFrame(()=>{ scrollGrowFrame=0; maybeGrowCanvasForScroll(false); }); },{passive:true});
     canvasArea.addEventListener('wheel',handleCanvasWheel,{passive:true});
     window.addEventListener('resize',()=>{fitCanvasToViewport(true);redraw();renderImages();renderTexts();});
-    document.addEventListener('paste',async e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items) return; for(const item of items){ if(item.type.startsWith('image/')){ e.preventDefault(); const f=item.getAsFile(); addImage(await fileToDataURL(f),120,120); } } });
-    canvasArea.addEventListener('dragover',e=>{e.preventDefault();}); canvasArea.addEventListener('drop',async e=>{e.preventDefault(); if(e.dataTransfer.files.length) await addImageFiles(e.dataTransfer.files);});
+    document.addEventListener('paste',async e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items) return; let offset=0; for(const item of items){ if(item.type.startsWith('image/')){ e.preventDefault(); const f=item.getAsFile(); const data=await fileToDataURL(f); const pt=visibleImageDropPoint(640,360,null,null,offset); addImage(data,pt.x,pt.y); offset+=28; } } });
+    canvasArea.addEventListener('dragover',e=>{e.preventDefault();}); canvasArea.addEventListener('drop',async e=>{e.preventDefault(); if(e.dataTransfer.files.length) await addImageFiles(e.dataTransfer.files,e.clientX,e.clientY);});
     el('imageBtn').onclick=()=>el('imageInput').click(); el('imageInput').onchange=e=>addImageFiles(e.target.files); el('openBtn').onclick=openProjectPicker; el('fileInput').onchange=e=>{ if(e.target.files[0]) openProjectFile(e.target.files[0]);};
     el('connectDriveBtn').onclick=connectDrive; el('cloudSaveBtn').onclick=()=>cloudSaveProject(false); el('cloudOpenBtn').onclick=cloudOpenProject;
     el('saveBtn').onclick=()=>{el('moreMenu').classList.add('hidden');saveProject();}; el('saveAsBtn').onclick=()=>{el('moreMenu').classList.add('hidden');saveProjectAs();}; el('downloadBtn').onclick=()=>{el('moreMenu').classList.add('hidden');downloadProjectCopy();}; el('exportBtn').onclick=()=>{el('moreMenu').classList.add('hidden');exportPNG();}; el('helpBtn').onclick=()=>{el('moreMenu').classList.add('hidden');el('modal').classList.add('show');}; el('openBtn').onclick=()=>{el('moreMenu').classList.add('hidden');openProjectPicker();};
     el('undoBtn').onclick=undo; el('redoBtn').onclick=redo; el('deleteLastBtn').onclick=deleteLast; el('renameBtn').onclick=renamePage; el('newPageBtn').onclick=newPage; el('newFolderBtn').onclick=createFolder; el('collapseFoldersBtn').onclick=()=>toggleAllFolders(true); el('expandFoldersBtn').onclick=()=>toggleAllFolders(false); el('pageSearch').oninput=()=>renderPages(); el('clearBtn').onclick=clearPage; el('deletePageBtn').onclick=deletePage; el('openDesmosBtn').onclick=()=>window.open('https://www.desmos.com/testing/collegeboard/graphing','_blank','noopener');
-    el('copyRefBtn').onclick=()=>addImage(REF_SRC,90,90,900); el('helpBtn').onclick=()=>el('modal').classList.add('show'); el('closeModalBtn').onclick=el('modalOkBtn').onclick=()=>el('modal').classList.remove('show');
+    el('copyRefBtn').onclick=()=>addImage(REF_SRC,null,null,900); el('helpBtn').onclick=()=>el('modal').classList.add('show'); el('closeModalBtn').onclick=el('modalOkBtn').onclick=()=>el('modal').classList.remove('show');
     document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault(); if(driveState.connected || driveState.fileId) cloudSaveProject(false); else saveProject();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();} if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();} if(e.key==='Delete'&&state.tool==='select'&&(state.selectedImageId||state.selectedTextId)){ e.preventDefault(); deleteLast(); }});
   }
   const _newPageV15=newPage;
