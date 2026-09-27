@@ -92,8 +92,8 @@
 
   .canvasArea{position:relative;min-height:0;overflow:auto;padding:26px 28px 80px;background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.72),transparent 34%),#e9eef6;overscroll-behavior:contain;scroll-behavior:auto}
   .canvasArea.boardMode{background:#0a0f1e}
-  .paperWrap{width:max-content;margin:0 auto;transform-origin:top left;position:relative;transition:none}
-  .board{position:relative;width:1400px;min-height:1700px;border-radius:22px;box-shadow:var(--shadow);overflow:hidden;border:1px solid #d7e0eb;background-color:#fff;background-image:linear-gradient(#e6edf5 1px,transparent 1px),linear-gradient(90deg,#e6edf5 1px,transparent 1px);background-size:36px 36px}
+  .paperWrap{width:max-content;margin:0 auto;transform-origin:top left;position:relative;transition:none;min-height:1px}
+  .board{position:relative;width:1400px;min-height:1700px;border-radius:22px;box-shadow:var(--shadow);overflow:hidden;border:1px solid #d7e0eb;background-color:#fff;background-image:linear-gradient(#e6edf5 1px,transparent 1px),linear-gradient(90deg,#e6edf5 1px,transparent 1px);background-size:36px 36px;transform-origin:top left}
   .board.black{background-color:#101827;background-image:none;border-color:#1e293b;box-shadow:0 18px 50px rgba(0,0,0,.35)}
     .imageLayer{position:absolute;inset:0;z-index:6}.drawLayer{position:absolute;left:0;top:0;z-index:10;touch-action:none;pointer-events:auto}.selectMode .drawLayer{pointer-events:none}.drawMode .imageLayer{pointer-events:none}.imageObj{position:absolute;user-select:none;touch-action:none;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.10);border:2px solid transparent;background:white;object-fit:contain}.imageObj.selected{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.18),0 8px 24px rgba(15,23,42,.15)}
   .resizeHandle{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;border-radius:6px;background:#2563eb;border:2px solid white;box-shadow:0 2px 8px rgba(15,23,42,.25);display:none;cursor:nwse-resize;z-index:7}.imageObj.selected + .resizeHandle{display:block}
@@ -217,7 +217,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><div class="logo">S</div><div class="brandText"><strong>SAT Canvas Studio Cloud</strong><span>GitHub Pages · Google Drive autosave</span></div></div>
+    <div class="brand"><div class="logo">S</div><div class="brandText"><strong>SAT Canvas Studio Cloud</strong><span>GitHub Pages · Google Drive save</span></div></div>
     <nav class="seg" aria-label="Views"><button id="tabCanvas" class="active" data-view="canvas">Canvas</button><button id="tabDesmos" data-view="desmos">Desmos</button><button id="tabRef" data-view="reference">Reference</button></nav>
     <div class="topspacer"></div>
     <button id="connectDriveBtn" class="btn primary" title="Authorize Google Drive saving">Sign in with Google</button>
@@ -362,6 +362,7 @@
   const MIN_H = 1700;
   const GROW_BY = 900;
   const LS_KEY = 'sat_canvas_studio_standalone_autosave_v1';
+  const LOCAL_PROJECT_AUTOSAVE_ENABLED = false; // v22: prevent stored project cache from corrupting drawing; Google Drive remains the real save path.
   const IDB_NAME = 'sat_canvas_file_handles_v1';
   const IDB_STORE = 'handles';
   const IDB_KEY = 'currentProjectHandle';
@@ -489,10 +490,15 @@
     attempt();
   }
   function scheduleLocalAutosave(){
+    if(!LOCAL_PROJECT_AUTOSAVE_ENABLED) return;
     clearTimeout(localSaveTimer);
     localSaveTimer=setTimeout(()=>runWhenIdle(()=>saveLocal(),1200),1500);
   }
-  function markDirty(){state.dirty=true;setStatus(driveState.fileId?'Changes pending · Drive autosave queued':(projectHandle?'Changes pending · local file autosave queued':'Changes pending · local autosave')); scheduleLocalAutosave(); scheduleLinkedAutosave(); scheduleCloudAutosave();}
+  function markDirty(){
+    state.dirty=true;
+    setStatus(driveState.fileId?'Changes pending · Drive autosave queued':(projectHandle?'Changes pending · local file autosave queued':'Changes pending · sign in or Download Copy'));
+    scheduleLocalAutosave(); scheduleLinkedAutosave(); scheduleCloudAutosave();
+  }
   function setStatus(s){
     status.textContent=s;
     const lower=String(s).toLowerCase();
@@ -504,8 +510,17 @@
     if(lower.includes('saved to google drive')) stateName='saved';
     status.dataset.state=stateName;
   }
-  function loadLocal(){try{const raw=localStorage.getItem(LS_KEY); if(raw){const data=JSON.parse(raw); if(data.pages&&data.pages.length){state.pages=data.pages; state.folders=Array.isArray(data.folders)?data.folders:[]; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||state.pages[state.current].mode||preferences.mode||'paper'; state.activeView=data.activeView||preferences.activeView||'canvas'; ensureNotebookStructure(); return true;}}}catch(e){} return false;}
-  function saveLocal(){try{localStorage.setItem(LS_KEY, JSON.stringify({folders:state.folders,pages:state.pages,current:state.current,mode:state.mode,activeView:state.activeView,savedAt:Date.now()}));state.dirty=false;}catch(e){console.warn(e);setStatus('Local autosave failed');}}
+  function loadLocal(){
+    if(!LOCAL_PROJECT_AUTOSAVE_ENABLED){
+      try{ localStorage.removeItem(LS_KEY); }catch(e){}
+      return false;
+    }
+    try{const raw=localStorage.getItem(LS_KEY); if(raw){const data=JSON.parse(raw); if(data.pages&&data.pages.length){state.pages=data.pages; state.folders=Array.isArray(data.folders)?data.folders:[]; state.current=Math.min(data.current||0,state.pages.length-1); state.mode=data.mode||state.pages[state.current].mode||preferences.mode||'paper'; state.activeView=data.activeView||preferences.activeView||'canvas'; ensureNotebookStructure(); return true;}}}catch(e){try{localStorage.removeItem(LS_KEY);}catch(_){}} return false;
+  }
+  function saveLocal(){
+    if(!LOCAL_PROJECT_AUTOSAVE_ENABLED){ try{ localStorage.removeItem(LS_KEY); }catch(e){} return; }
+    try{localStorage.setItem(LS_KEY, JSON.stringify({folders:state.folders,pages:state.pages,current:state.current,mode:state.mode,activeView:state.activeView,savedAt:Date.now()}));state.dirty=false;}catch(e){console.warn(e);setStatus('Local autosave failed');}
+  }
   function setup(){
     loadPreferences();
     syncStateFromPreferences();
@@ -782,6 +797,7 @@
   function getCurrentScale(){ return state.currentScale || 1; }
   function applyZoom(){
     const p = page();
+    if(!p) return;
     let z = state.zoom;
     let scale;
     if(z === 'fit'){
@@ -792,53 +808,71 @@
     }
     state.currentScale = scale;
 
-    // Important: do NOT scale the scroll container itself.
-    // The board is visually scaled, while paperWrap has the real scaled layout size.
-    // This makes scrolling behave like a normal notebook page instead of stretching.
-    const visualH = Math.max(1, (p?.height || MIN_H) * scale);
+    // Chromebook-safe zoom:
+    // The scroll area uses a real scaled wrapper size, while the actual board keeps
+    // its internal 1400px coordinate system. Chrome's CSS zoom handles the visual
+    // scaling without the transform/stretch problems caused by v20/v21.
+    const h = Math.max(MIN_H, p.height || MIN_H);
     paperWrap.style.transform = 'none';
-    paperWrap.style.width = (W * scale) + 'px';
-    paperWrap.style.height = visualH + 'px';
-    paperWrap.style.marginBottom = '120px';
+    paperWrap.style.width = Math.ceil(W * scale) + 'px';
+    paperWrap.style.height = Math.ceil(h * scale) + 'px';
+    paperWrap.style.marginBottom = '140px';
 
     board.style.position = 'absolute';
     board.style.left = '0';
     board.style.top = '0';
-    board.style.transformOrigin = 'top left';
-    board.style.transform = `scale(${scale})`;
+    board.style.width = W + 'px';
+    board.style.height = h + 'px';
+    board.style.minHeight = h + 'px';
+    board.style.transform = 'none';
+    board.style.zoom = String(scale);
+  }
+  function growCanvasBy(amount=GROW_BY){
+    const p=page();
+    if(!p) return;
+    const oldH=p.height || MIN_H;
+    p.height = oldH + amount;
+    resizeCanvas(p.height);
+    redraw();
+    renderImages();
+    renderTexts();
+    applyZoom();
+    // Important: growing blank space is layout only. It must not touch localStorage
+    // or mark the project dirty, because that old behavior correlated with the
+    // Chrome site-data/drawing bug on this Chromebook.
+    refreshCurrentPageMeta();
   }
   function maybeGrowCanvasForScroll(force=false){
     const p=page();
     if(!p) return;
-    const scale = getCurrentScale();
+    const scale=getCurrentScale();
     const visualBottom = canvasArea.scrollTop + canvasArea.clientHeight;
     const visualHeight = (p.height || MIN_H) * scale;
-    if(force || visualBottom > visualHeight - 520){
-      const oldH = p.height || MIN_H;
-      p.height = oldH + GROW_BY;
-      resizeCanvas(p.height);
-      redraw();
-      renderImages();
-      renderTexts();
-      applyZoom();
-      // Do not autosave merely because extra blank workspace was prepared.
-      refreshCurrentPageMeta();
-    }
+    if(force || visualBottom > visualHeight - 650) growCanvasBy(GROW_BY);
   }
   function handleCanvasWheel(e){
-    // Allow normal trackpad/mouse-wheel scrolling over the canvas.
-    // Prevent the page/body from taking the wheel, then scroll the actual workspace.
-    // Ctrl+wheel is left alone so browser pinch/zoom gestures are not hijacked.
+    // Do not block Chrome's native two-finger scrolling. Chrome can make wheel
+    // listeners passive by default on root targets; the safe pattern is to let
+    // native scrolling happen, then only use a fallback if the scrollTop did not move.
     if(e.ctrlKey || state.drawing) return;
     const dx = Number(e.deltaX) || 0;
     const dy = Number(e.deltaY) || 0;
     if(!dx && !dy) return;
-    e.preventDefault();
-    canvasArea.scrollLeft += e.shiftKey && Math.abs(dy) > Math.abs(dx) ? dy : dx;
-    if(!(e.shiftKey && Math.abs(dy) > Math.abs(dx))) canvasArea.scrollTop += dy;
-    maybeGrowCanvasForScroll(false);
+    const beforeTop = canvasArea.scrollTop;
+    const beforeLeft = canvasArea.scrollLeft;
+    requestAnimationFrame(()=>{
+      const topMoved = Math.abs(canvasArea.scrollTop - beforeTop) > 0.5;
+      const leftMoved = Math.abs(canvasArea.scrollLeft - beforeLeft) > 0.5;
+      if(!topMoved && Math.abs(dy) > 0){
+        canvasArea.scrollTop = beforeTop + dy;
+      }
+      if(!leftMoved && Math.abs(dx) > 0){
+        canvasArea.scrollLeft = beforeLeft + dx;
+      }
+      maybeGrowCanvasForScroll(false);
+    });
   }
-  function projectPayload(){ return {app:'SAT Canvas Studio',version:3,savedAt:new Date().toISOString(),folders:state.folders,pages:state.pages,current:state.current,mode:state.mode}; }
+  function projectPayload(){ return {app:'SAT Canvas Studio',version:4,savedAt:new Date().toISOString(),folders:state.folders,pages:state.pages,current:state.current,mode:state.mode}; }
   function projectBlob(){ return new Blob([JSON.stringify(projectPayload(),null,2)],{type:'application/json'}); }
   function googleClientId(){
     return ((window.SAT_CANVAS_CONFIG && window.SAT_CANVAS_CONFIG.GOOGLE_CLIENT_ID) || '').trim();
@@ -1208,9 +1242,9 @@
     window.addEventListener('blur',()=>{if(state.drawing)endDraw({preventDefault(){}});});
     board.addEventListener('pointerdown',e=>{ if(state.tool==='select' && e.target===board) clearSelection(); });
     canvasArea.addEventListener('scroll',()=>{ if(scrollGrowFrame) return; scrollGrowFrame=requestAnimationFrame(()=>{ scrollGrowFrame=0; maybeGrowCanvasForScroll(false); }); },{passive:true});
-    canvasArea.addEventListener('wheel',handleCanvasWheel,{passive:false});
-    board.addEventListener('wheel',handleCanvasWheel,{passive:false});
-    canvas.addEventListener('wheel',handleCanvasWheel,{passive:false});
+    canvasArea.addEventListener('wheel',handleCanvasWheel,{passive:true});
+    board.addEventListener('wheel',handleCanvasWheel,{passive:true});
+    canvas.addEventListener('wheel',handleCanvasWheel,{passive:true});
     document.addEventListener('paste',async e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items) return; for(const item of items){ if(item.type.startsWith('image/')){ e.preventDefault(); const f=item.getAsFile(); addImage(await fileToDataURL(f),120,120); } } });
     canvasArea.addEventListener('dragover',e=>{e.preventDefault();}); canvasArea.addEventListener('drop',async e=>{e.preventDefault(); if(e.dataTransfer.files.length) await addImageFiles(e.dataTransfer.files);});
     el('imageBtn').onclick=()=>el('imageInput').click(); el('imageInput').onchange=e=>addImageFiles(e.target.files); el('openBtn').onclick=openProjectPicker; el('fileInput').onchange=e=>{ if(e.target.files[0]) openProjectFile(e.target.files[0]);};
